@@ -24,12 +24,12 @@ const SavedScreen = props => {
             <View style={styles.each}>
                 <View style={styles.block}>
                     <View style={styles.imageContainer}>
-                        <Image style={styles.image} source={{ uri: savedData[0] ? savedData[0].imageUrl : '' }} />
-                        <Image style={styles.image} source={{ uri: savedData[1] ? savedData[1].imageUrl : '' }} />
+                        <Image style={styles.image} source={{ uri: savedData[0] ? savedData[0].imageUrl[0] : '' }} />
+                        <Image style={styles.image} source={{ uri: savedData[1] ? savedData[1].imageUrl[0] : '' }} />
                     </View>
                     <View style={styles.imageContainer}>
-                        <Image style={styles.image} source={{ uri: savedData[2] ? savedData[2].imageUrl : '' }} />
-                        <Image style={styles.image} source={{ uri: savedData[3] ? savedData[3].imageUrl : '' }} />
+                        <Image style={styles.image} source={{ uri: savedData[2] ? savedData[2].imageUrl[0] : '' }} />
+                        <Image style={styles.image} source={{ uri: savedData[3] ? savedData[3].imageUrl[0] : '' }} />
                     </View>
                 </View>
                 <View style={styles.textContainer}>
@@ -37,6 +37,12 @@ const SavedScreen = props => {
                 </View>
             </View>
         </TouchableNativeFeedback>
+    }
+
+    if(!savedData || savedData.length === 0) {
+        return <View style={styles.centered}>
+            <Text>No saved post yet. Add some!!!</Text>
+        </View>
     }
 
     return <FlatList columnWrapperStyle={styles.screen} data={allDatas} numColumns={2} keyExtractor={item => item} renderItem={renderItemHandler} />
@@ -47,6 +53,11 @@ SavedScreen.navigationOptions = {
 }
 
 const styles = StyleSheet.create({
+    centered: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },  
     each: {
         width: '45%',
         height: 210

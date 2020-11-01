@@ -1,22 +1,25 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, FlatList, TouchableNativeFeedback, ScrollView, Modal, ActivityIndicator, InteractionManager } from 'react-native';
+import { View, Text, Image, StyleSheet, FlatList, TouchableNativeFeedback, ScrollView, Modal, ActivityIndicator, TouchableHighlight } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import ImageTile from '../components/ImageTile';
-import { fetchUserData } from '../store/actions/user';
+import { notificationCreator } from '../store/actions/notification';
+import { addFollowing, fetchEntireUserDatabase, removeFollowing } from '../store/actions/user';
 
 let images = [];
 
 const UserProfile = props => {
-    const [isReady, setIsReady] = useState(true);
+    const [refresh, setRefresh] = useState(false);
     const [active, setActive] = useState('grid');
     const [showModal, setShowModal] = useState(false);
     const [url, setUrl] = useState();
     const [loader, setLoader] = useState(false);
     const dispatch = useDispatch();
-    let user = props.navigation.getParam('user') ? props.navigation.getParam('user') : props.myProfile;
+    let user = props.user ? props.user : props.myProfile;
     const userDatabase = useSelector(state => state.user.enitreUserDatabase);
     const feedData = useSelector(state => state.images.feedData);
+    const isFollowing = props.isFollowing;
+    const loggedInUser = useSelector(state => state.user.loggedInUserdata)
 
     const fetchImageData = () => {
         setLoader(true);
@@ -34,11 +37,6 @@ const UserProfile = props => {
         });
     }, []);
 
-    useEffect(() => {
-        const isItLoggedInProfile = props.navigation.getParam('user') ? false : true;
-        dispatch(fetchUserData(user.username, isItLoggedInProfile));
-    }, [userDatabase]);
-
     const iconTappedHandler = identifier => {
         setActive(identifier);
     }
@@ -52,7 +50,7 @@ const UserProfile = props => {
             isMyProfile: !!props.myProfile
         });
     }
-    
+
     const imageDetailsHandler = index => {
         props.navigation.navigate('ImageDetails', {
             userData: images,
@@ -71,7 +69,25 @@ const UserProfile = props => {
         setUrl();
     }
 
-    if (loader) {
+    const manageFollowHandler = async () => {
+        if (isFollowing) {
+            //If following then onPress remove from following list.
+            setRefresh(true);
+            await dispatch(removeFollowing(props.user.username, props.user.localId));
+            await dispatch(fetchEntireUserDatabase());
+            setRefresh(false);
+        } else {
+            //Add to following list
+            setRefresh(true);
+            await dispatch(addFollowing(props.user.username, props.user.localId));
+            await dispatch(fetchEntireUserDatabase());
+            setRefresh(false);
+            dispatch(notificationCreator(props.user.localId, 'Following', loggedInUser.username + ' started following you.', 'Following',
+                    null, loggedInUser.localId));
+        }
+    }
+
+    if (loader || !user) {
         return (
             <View style={styles.centered}>
                 <ActivityIndicator size="large" color="green" />
@@ -103,6 +119,18 @@ const UserProfile = props => {
             <View style={styles.details}>
                 <Text style={{ fontFamily: 'open-sans-bold' }}>{user.fullName}</Text>
                 <Text>{user.status}</Text>
+                {user.username !== loggedInUser.username ? <View style={styles.buttons}>
+                    <TouchableHighlight style={styles.common} onPress={manageFollowHandler}>
+                        <View style={isFollowing === true ? styles.followingButton : styles.followButton}>
+                            {isFollowing === true && <Ionicons name="md-arrow-dropdown" size={22} color="black" />}
+                            <Text>{isFollowing === true ? 'Following' : 'Follow'}</Text>
+                            {refresh && <ActivityIndicator size="small" color="black" />}
+                        </View>
+                    </TouchableHighlight>
+                    <TouchableHighlight style={styles.messageButton} onPress={() => { }}>
+                        <Text>Message</Text>
+                    </TouchableHighlight>
+                </View> : null}
             </View>
             <View style={styles.iconbars}>
                 <View style={styles.icons}>
@@ -230,6 +258,45 @@ const styles = StyleSheet.create({
         bottom: 0,
         right: 0,
     },
+    buttons: {
+        flexDirection: 'row',
+        width: '100%',
+        height: 30,
+        justifyContent: 'space-around',
+        marginVertical: 10
+    },
+    common: {
+        width: '40%',
+        height: '100%',
+    },
+    followButton: {
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 7,
+        backgroundColor: 'dodgerblue',
+        flexDirection: 'row'
+    },
+    followingButton: {
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 7,
+        flexDirection: 'row',
+        borderColor: '#ccc',
+        borderWidth: 1
+    },
+    messageButton: {
+        width: '40%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 7,
+        borderColor: '#ccc',
+        borderWidth: 1
+    }
 })
 
 export default UserProfile;

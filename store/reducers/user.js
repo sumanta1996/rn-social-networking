@@ -1,83 +1,69 @@
-import { ADD_FOLLOWING, FETCH_USER_DATA, REMOVE_FOLLOWERS, SEARCH_USERS } from "../actions/user";
-import { userData, feedData } from '../../data/dummy-data';
+import { ADD_FOLLOWING, FETCH_ENTIRE_USER, FETCH_USER_DATA, MERGE_TO_FOLLOWERS, MERGE_TO_FOLLOWING, REMOVE_FOLLOWERS, SEARCH_USERS, SET_LOGIN_DATA } from "../actions/user";
 import { SUBMIT_HANDLER } from "../actions/images";
 
 const initialState = {
-    enitreUserDatabase: userData,
+    enitreUserDatabase: [],
     userData: null,
-    loggedInUserdata: userData.find(user => user.username === 'r.das'),
+    loggedInUserdata: [],
     searchedUsers: []
 }
 
 export default (state = initialState, action) => {
-    const manageFollowHandler = () => {
-        const updateUserDatabase = [...state.enitreUserDatabase];
-        const index = state.enitreUserDatabase.findIndex(user => user.username === action.username);
-        let updateduserData = state.enitreUserDatabase.find(user => user.username === action.username);
-        let updatedDatas = action.identifier === 'followers' ? updateduserData.followers : updateduserData.following;
-
-        const indexActionPerformedUser = state.enitreUserDatabase.findIndex(
-            user => user.username === (action.identifier ? action.userTobeRemoved : action.userTobeAdded));
-        if (action.identifier) {
-            const indexUserRemoved = state.enitreUserDatabase.findIndex(user => user.username === action.userTobeRemoved);
-            let updatedUserRemovedData = state.enitreUserDatabase.find(user => user.username === action.userTobeRemoved);
-            //For the user we gonna remove it gonna be opposite of what it is.
-            let updatedUserRemovedFollowData = action.identifier === 'followers' ? updatedUserRemovedData.following : updatedUserRemovedData.followers;
-            updatedUserRemovedFollowData = updatedUserRemovedFollowData.filter(data => data !== action.username);
-            const identifier = action.identifier === 'followers' ? 'following' : 'followers';
-            updatedUserRemovedData = {
-                ...updatedUserRemovedData,
-                [identifier]: updatedUserRemovedFollowData
-            }
-            updateUserDatabase[indexUserRemoved] = updatedUserRemovedData;
-
-            //Removing users
-            updatedDatas = updatedDatas.filter(data => data !== action.userTobeRemoved);
-        } else {
-            const indexUserRemoved = state.enitreUserDatabase.findIndex(user => user.username === action.userTobeAdded);
-            let updatedUserRemovedData = state.enitreUserDatabase.find(user => user.username === action.userTobeAdded);
-
-            let updatedUserRemovedFollowData = updatedUserRemovedData.followers;
-            updatedUserRemovedFollowData.push(action.username);
-            updatedUserRemovedData = {
-                ...updatedUserRemovedData,
-                [action.identifier]: updatedUserRemovedFollowData
-            }
-            updateUserDatabase[indexUserRemoved] = updatedUserRemovedData;
-
-            //Adding users
-            updatedDatas.push(action.userTobeAdded);
-        }
-        updateduserData = {
-            ...updateduserData,
-            [action.identifier]: updatedDatas
-        };
-        updateUserDatabase[index] = updateduserData;
-        return updateUserDatabase;
-    }
-
     switch (action.type) {
+        case SET_LOGIN_DATA:
+            return {
+                ...state,
+                loggedInUserdata: action.loggedInUser
+            }
         case FETCH_USER_DATA:
-            if (action.isItLoggedInProfile) {
-                return {
-                    ...state,
-                    loggedInUserdata: state.enitreUserDatabase.find(user => user.username === action.username)
-                }
-            } else {
-                return {
-                    ...state,
-                    userData: state.enitreUserDatabase.find(user => user.username === action.username)
-                }
+            return {
+                ...state,
+                userData: action.userData
+            }
+        case FETCH_ENTIRE_USER:
+            return {
+                ...state,
+                enitreUserDatabase: action.entireUserDatabase
             }
         case REMOVE_FOLLOWERS:
+            let updateLoggedInData = { ...state.loggedInUserdata };
+            updateLoggedInData = {
+                ...updateLoggedInData,
+                followers: action.followers
+            }
             return {
                 ...state,
-                enitreUserDatabase: manageFollowHandler()
+                loggedInUserdata: updateLoggedInData
+            }
+        case MERGE_TO_FOLLOWING:
+            let updateUserData = { ...state.userData };
+            updateUserData = {
+                ...updateUserData,
+                following: action.following
+            }
+            return {
+                ...state,
+                userData: updateUserData
             }
         case ADD_FOLLOWING:
+            let updatedLoggedInData = { ...state.loggedInUserdata };
+            updatedLoggedInData = {
+                ...updatedLoggedInData,
+                following: action.following
+            }
             return {
                 ...state,
-                enitreUserDatabase: manageFollowHandler()
+                loggedInUserdata: updatedLoggedInData
+            }
+        case MERGE_TO_FOLLOWERS:
+            let updatedUserData = { ...state.userData };
+            updatedUserData = {
+                ...updatedUserData,
+                followers: action.followers
+            }
+            return {
+                ...state,
+                userData: updatedUserData
             }
         case SEARCH_USERS:
             return {
@@ -88,7 +74,7 @@ export default (state = initialState, action) => {
             const updatedLoggedinUserData = { ...state.loggedInUserdata };
             updatedLoggedinUserData.posts = +updatedLoggedinUserData.posts + 1;
 
-            let updatedEnitreUserDatabase = [ ...state.enitreUserDatabase ];
+            let updatedEnitreUserDatabase = [...state.enitreUserDatabase];
             const updatedUserIndex = updatedEnitreUserDatabase.findIndex(user => user.username === updatedLoggedinUserData.username);
             updatedEnitreUserDatabase[updatedUserIndex] = updatedLoggedinUserData;
 

@@ -16,8 +16,8 @@ const CardView = props => {
         } else {
             const timeDifference = Date.now() - lastTap;
             setLastTap();
-            //If time difference is less than 300ms then it's double tapped
-            if (timeDifference < 300) {
+            //If time difference is less than 400ms then it's double tapped
+            if (timeDifference < 400) {
                 console.log('Double Tapped');
                 setIsLiked(true);
                 setShowHeart(true);
@@ -77,6 +77,13 @@ const CardView = props => {
             <TouchableWithoutFeedback onPress={props.onLikesPress}>
                 <Text style={styles.likeText}>{props.likedPeople} likes</Text>
             </TouchableWithoutFeedback>
+            <View style={styles.descriptionContainer}>
+                <TouchableWithoutFeedback>
+                    <Text>
+                        <Text style={{fontFamily: 'open-sans-bold', fontSize: 13}} onPress={props.onPress}>{props.fullName} </Text>
+                        {props.description}</Text>
+                </TouchableWithoutFeedback>
+            </View>
             <View style={styles.bottomContainer}>
                 <View style={styles.likeCommentIcons}>
                     <AntDesign name={isLiked ? "heart" : "hearto"} size={25} onPress={() => {
@@ -169,6 +176,12 @@ const styles = StyleSheet.create({
         zIndex: 10,
         top: '40%',
         left: '40%'
+    },
+    descriptionContainer: {
+        flexDirection: 'row',
+        width: '100%',
+        marginRight: 10,
+        paddingHorizontal: 10
     }
 })
 

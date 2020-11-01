@@ -1,9 +1,10 @@
-export const feedData = [
+/*export const feedData = [
     {
         id: '1',
         imageUrl: ['https://www.searchenginewatch.com/wp-content/uploads/2018/10/ThinkstockPhotos-503426092.jpg',
             'https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=500&q=60',
             'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=500&q=60'],
+        description: 'Hey see my travel photos. Isnt it cool? Comment me to let us know ',
         username: 'r.das',
         likedPeople: ['priy.chav', 'sus.nan', 'labanya', 'r.sonkar'],
         comments: [
@@ -13,7 +14,7 @@ export const feedData = [
                 comments: 'Seems like a nice picture',
                 isLiked: false
             },
-            {
+            { 
                 id: '2',
                 username: 'priy.chav',
                 comments: 'Seems like a nice picture',
@@ -33,6 +34,7 @@ export const feedData = [
         imageUrl: ['https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=500&q=60'],
         username: 'priy.chav',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['r.das', 'priy.chav']
     },
     {
@@ -40,6 +42,7 @@ export const feedData = [
         imageUrl: ['https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=500&q=60'],
         username: 'sus.nan',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['r.das', 'priy.chav']
     },
     {
@@ -47,6 +50,7 @@ export const feedData = [
         imageUrl: ['https://images.unsplash.com/photo-1581456495146-65a71b2c8e52?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=500&q=60'],
         username: 'sush.Nan',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['r.das', 'priy.chav']
     },
     {
@@ -54,6 +58,7 @@ export const feedData = [
         imageUrl: ['https://image.shutterstock.com/image-photo/howrah-bridge-historic-cantilever-on-260nw-677901256.jpg'],
         username: 'rosh.das',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['r.das', 'priy.chav']
     },
     {
@@ -61,6 +66,7 @@ export const feedData = [
         imageUrl: ['https://i.pinimg.com/originals/ca/76/0b/ca760b70976b52578da88e06973af542.jpg'],
         username: 'r.sonkar',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['r.das', 'priy.chav']
     },
     {
@@ -68,6 +74,7 @@ export const feedData = [
         imageUrl: ['https://image.shutterstock.com/image-photo/bright-spring-view-cameo-island-260nw-1048185397.jpg'],
         username: 'labanya',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['r.das', 'priy.chav']
     },
     {
@@ -75,6 +82,7 @@ export const feedData = [
         imageUrl: ['https://images.unsplash.com/photo-1541963463532-d68292c34b19?ixlib=rb-1.2.1&w=1000&q=80'],
         username: 'r.das',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['r.das', 'priy.chav']
     },
     {
@@ -82,6 +90,7 @@ export const feedData = [
         imageUrl: ['https://media.istockphoto.com/photos/child-hands-formig-heart-shape-picture-id951945718?k=6&m=951945718&s=612x612&w=0&h=ih-N7RytxrTfhDyvyTQCA5q5xKoJToKSYgdsJ_mHrv0='],
         username: 'r.das',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['r.das', 'priy.chav']
     },
     {
@@ -89,6 +98,7 @@ export const feedData = [
         imageUrl: ['https://media.gettyimages.com/photos/woman-lifts-her-arms-in-victory-mount-everest-national-park-picture-id507910624?s=612x612'],
         username: 'r.das',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['r.das', 'priy.chav']
     },
     {
@@ -96,6 +106,7 @@ export const feedData = [
         imageUrl: ['https://i.pinimg.com/originals/af/8d/63/af8d63a477078732b79ff9d9fc60873f.jpg'],
         username: 'r.das',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['r.das', 'priy.chav']
     },
     {
@@ -103,6 +114,7 @@ export const feedData = [
         imageUrl: ['https://images.unsplash.com/photo-1535332371349-a5d229f49cb5?ixlib=rb-1.2.1&w=1000&q=80'],
         username: 'r.das',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['r.das', 'priy.chav']
     },
     {
@@ -110,6 +122,7 @@ export const feedData = [
         imageUrl: ['https://images.unsplash.com/photo-1535332371349-a5d229f49cb5?ixlib=rb-1.2.1&w=1000&q=80'],
         username: 'r.das',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['r.das', 'priy.chav']
     },
     {
@@ -117,6 +130,7 @@ export const feedData = [
         imageUrl: ['https://images.unsplash.com/photo-1535332371349-a5d229f49cb5?ixlib=rb-1.2.1&w=1000&q=80'],
         username: 'r.das',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['r.das', 'priy.chav']
     },
     {
@@ -124,6 +138,7 @@ export const feedData = [
         imageUrl: ['https://images.unsplash.com/photo-1535332371349-a5d229f49cb5?ixlib=rb-1.2.1&w=1000&q=80'],
         username: 'r.das',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['r.das', 'priy.chav']
     },
     {
@@ -131,6 +146,7 @@ export const feedData = [
         imageUrl: ['https://images.unsplash.com/photo-1535332371349-a5d229f49cb5?ixlib=rb-1.2.1&w=1000&q=80'],
         username: 'r.das',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['r.das', 'priy.chav']
     },
     {
@@ -138,6 +154,7 @@ export const feedData = [
         imageUrl: ['https://images.unsplash.com/photo-1535332371349-a5d229f49cb5?ixlib=rb-1.2.1&w=1000&q=80'],
         username: 'r.das',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['r.das', 'priy.chav']
     },
     {
@@ -145,6 +162,7 @@ export const feedData = [
         imageUrl: ['https://images.unsplash.com/photo-1535332371349-a5d229f49cb5?ixlib=rb-1.2.1&w=1000&q=80'],
         username: 'r.das',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['r.das', 'priy.chav']
     },
     {
@@ -152,6 +170,7 @@ export const feedData = [
         imageUrl: ['https://images.unsplash.com/photo-1535332371349-a5d229f49cb5?ixlib=rb-1.2.1&w=1000&q=80'],
         username: 'r.das',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['r.das', 'priy.chav']
     },
     {
@@ -159,6 +178,7 @@ export const feedData = [
         imageUrl: ['https://images.unsplash.com/photo-1535332371349-a5d229f49cb5?ixlib=rb-1.2.1&w=1000&q=80'],
         username: 'r.das',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['r.das', 'priy.chav']
     },
     {
@@ -167,6 +187,7 @@ export const feedData = [
         videoUrl: 'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4',
         username: 'priy.chav',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['priy.chav']
     },
     {
@@ -174,6 +195,7 @@ export const feedData = [
         imageUrl: ['https://docs.imagga.com/static/images/docs/sample/japan-605234_1280.jpg'],
         username: 'priy.chav',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['priy.chav']
     },
     {
@@ -181,6 +203,7 @@ export const feedData = [
         imageUrl: ['https://i.pinimg.com/originals/9f/5b/86/9f5b861cab2951d4de0640329bb8355f.jpg'],
         username: 'priy.chav',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['priy.chav']
     },
     {
@@ -188,11 +211,12 @@ export const feedData = [
         imageUrl: ['https://cdn.kyushuandtokyo.org/front_assets/images_other/spot/small/asokako1.jpg'],
         username: 'priy.chav',
         likedPeople: ['r.das', 'priy.chav', 'sus.nan', 'labanya'],
+        comments: [],
         savedBy: ['priy.chav']
     }
-]
+]*/
 
-export const userData = [
+/* export const userData = [
     {
         username: 'r.das',
         fullName: 'Raunak Das',
@@ -256,4 +280,4 @@ export const userData = [
         followers: ['r.sonkar'],
         status: 'Hey I am in Instagram. Lets connect '
     }
-]
+]  */

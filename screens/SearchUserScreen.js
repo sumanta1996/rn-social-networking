@@ -26,7 +26,8 @@ const SearchUserScreen = props => {
     const childDataHandler = itemData => {
         return (
             <TouchableOpacity onPress={() => props.navigation.navigate('UserProfile', {
-                user: itemData.item
+                username: itemData.item.username,
+                id: itemData.item.id
             })}>
                 <View style={styles.eachData}>
                     <Image source={{ uri: itemData.item.profileImage }} style={styles.image} />

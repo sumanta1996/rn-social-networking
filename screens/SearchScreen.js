@@ -8,7 +8,8 @@ import LayoutScreen from './LayoutScreen';
 
 const SearchScreen = props => {
     const feedData = useSelector(state => state.images.feedData);
-    const images = feedData.filter(feed => !feed.username.includes('r.das'));
+    const loggedInUsername = useSelector(state => state.user.loggedInUserdata.username);
+    const images = feedData.filter(feed => !feed.username.includes(loggedInUsername));
 
     const imageDetailsHandler = index => {
         props.navigation.navigate('ImageDetails', {

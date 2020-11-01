@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableNativeFeedback, FlatList, Image, TouchableWithoutFeedback } from 'react-native';
+import { ActivityIndicator } from 'react-native-paper';
 import { useSelector, useDispatch, connect } from 'react-redux';
 import SearchBar from '../components/SearchBar';
-import { addFollowing, removeFollowers } from '../store/actions/user';
+import { notificationCreator } from '../store/actions/notification';
+import { addFollowing, fetchEntireUserDatabase, removeFollowers, removeFollowersLoggedInUser, removeFollowing } from '../store/actions/user';
 
 const FollowersFollowingScreen = props => {
     const dispatch = useDispatch();
@@ -13,6 +15,7 @@ const FollowersFollowingScreen = props => {
     const following = props.navigation.getParam('following');
     const isMyProfile = props.navigation.getParam('isMyProfile');
     const loggedinUser = useSelector(state => state.user.loggedInUserdata);
+    const [refresh, setRefresh] = useState();
 
 
     const toggleHandler = identifier => setActive(identifier);
@@ -39,24 +42,44 @@ const FollowersFollowingScreen = props => {
 
     useEffect(() => {
         fetchUserList();
-    }, [active, entireUserData]);
+    }, [active, entireUserData, username]);
 
-    const manageFollowersHandler = (identifier, userTobeRemoved) => {
-        if (identifier === 'follow') {
-            dispatch(addFollowing(loggedinUser.username, userTobeRemoved))
+    const manageFollowersHandler = async (identifier, username, localId) => {
+        if (identifier === 'remove') {
+            //The only difference between remove and removing from following is that the operation is opposite
+            setRefresh(username);
+            await dispatch(removeFollowersLoggedInUser(username, localId));
+            await dispatch(fetchEntireUserDatabase());
+            setRefresh();
+        }
+        else if (identifier === 'follow') {
+            //Add to following list
+            setRefresh(username);
+            await dispatch(addFollowing(username, localId));
+            await dispatch(fetchEntireUserDatabase());
+            setRefresh();
+            dispatch(notificationCreator(localId, 'Following', loggedinUser.username + ' started following you.', 'Following',
+                    null, loggedinUser.localId));
+
         } else {
-            dispatch(removeFollowers(loggedinUser.username, identifier, userTobeRemoved));
+            //If following then onPress remove from following list.
+            setRefresh(username);
+            await dispatch(removeFollowing(username, localId));
+            await dispatch(fetchEntireUserDatabase());
+            setRefresh();
         }
     }
 
     const eachUserHandler = itemData => {
+        console.log(itemData.item);
         const isItMyProfile = loggedinUser.username === itemData.item.username;
         const isFollowing = !!loggedinUser.following.find(user => user === itemData.item.username);
         return (
             <View style={styles.container}>
                 <TouchableWithoutFeedback onPress={
                     () => props.navigation.navigate('UserProfile', {
-                        user: itemData.item
+                        username: itemData.item.username,
+                        id: itemData.item.id
                     })
                 }>
                     <View style={styles.userDetails}>
@@ -70,15 +93,17 @@ const FollowersFollowingScreen = props => {
                     </View>
                 </TouchableWithoutFeedback>
                 {isMyProfile ? <TouchableNativeFeedback
-                    onPress={manageFollowersHandler.bind(this, active === 'followers' ? 'followers' : 'following', itemData.item.username)}>
+                    onPress={manageFollowersHandler.bind(this, active === 'followers' ? 'remove' : 'following', itemData.item.username, itemData.item.id)}>
                     <View style={styles.button}>
                         <Text>{active === 'followers' ? 'Remove' : 'Following'}</Text>
+                        {refresh && refresh === itemData.item.username && <ActivityIndicator size="small" color="black" />}
                     </View>
                 </TouchableNativeFeedback> :
                     !isItMyProfile && <TouchableNativeFeedback
-                        onPress={manageFollowersHandler.bind(this, isFollowing ? 'following' : 'follow', itemData.item.username)}>
+                        onPress={manageFollowersHandler.bind(this, isFollowing ? 'following' : 'follow', itemData.item.username, itemData.item.id)}>
                         <View style={isFollowing ? styles.button : styles.buttonFollow}>
                             <Text>{isFollowing ? 'Following' : 'Follow'}</Text>
+                            {refresh && refresh === itemData.item.username && <ActivityIndicator size="small" color="black" />}
                         </View>
                     </TouchableNativeFeedback>}
             </View>)
@@ -196,7 +221,8 @@ const styles = StyleSheet.create({
         borderColor: 'black',
         borderWidth: 1,
         borderRadius: 10,
-        justifyContent: 'center'
+        alignItems: 'center',
+        flexDirection: 'row'
     },
     buttonFollow: {
         height: 40,
@@ -205,8 +231,9 @@ const styles = StyleSheet.create({
         borderColor: 'black',
         borderWidth: 1,
         borderRadius: 10,
-        justifyContent: 'center',
-        backgroundColor: '#00FFFF'
+        alignItems: 'center',
+        backgroundColor: '#00FFFF',
+        flexDirection: 'row'
     }
 });
 

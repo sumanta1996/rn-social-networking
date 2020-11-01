@@ -1,17 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AsyncStorage } from 'react-native';
 import * as Font from 'expo-font';
 import { AppLoading } from 'expo';
 import AppNavigator from './navigation/AppNavigator';
 import UserData from './store/reducers/user';
 import ImagesData from './store/reducers/images';
+import NotificationData from './store/reducers/notification';
 import { combineReducers, createStore, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux';
 import ActiveBar from './store/reducers/ActiveBar';
 import ReduxThunk from 'redux-thunk';
 import { composeWithDevTools } from 'redux-devtools-extension';
+import firebase from 'firebase';
+import * as Notifications from 'expo-notifications';
 
-const persistenceKey = "persistenceKey"
+Notifications.setNotificationHandler({
+  handleNotification: async () => {
+    return {
+      shouldPlaySound: true,
+      shouldShowAlert: true
+    }
+  }
+})
+
+const config = {
+  apiKey: "AIzaSyAOA-42HV4pasMPJPSrzuFvdoD-r0uTFHo",
+  authDomain: "rn-social-networking.firebaseapp.com",
+  databaseURL: "https://rn-social-networking.firebaseio.com/",
+  storageBucket: "rn-social-networking.appspot.com"
+};
 
 const fetchFonts = () => {
   return Font.loadAsync({
@@ -23,29 +40,26 @@ const fetchFonts = () => {
 export default function App() {
   const [fontLoaded, setFontLoaded] = useState(false);
 
+  if (!firebase.apps.length) {
+    firebase.initializeApp(config);
+  }
+
   const rootReducer = combineReducers({
     user: UserData,
     images: ImagesData,
-    activeBar: ActiveBar
+    activeBar: ActiveBar,
+    notification: NotificationData
   });
 
   const store = createStore(rootReducer, composeWithDevTools(applyMiddleware(ReduxThunk)));
 
+  useEffect(() => {
+    
+  }, []);
+
   if (!fontLoaded) {
     return <AppLoading startAsync={fetchFonts} onFinish={() => setFontLoaded(true)} onError={err => console.log(err)} />;
   }
-
-  /* const persistNavigationState = async (navState) => {
-    try {
-      await AsyncStorage.setItem(persistenceKey, JSON.stringify(navState))
-    } catch(err) {
-      // handle the error according to your needs
-    }
-  }
-  const loadNavigationState = async () => {
-    const jsonString = await AsyncStorage.getItem(persistenceKey)
-    return JSON.parse(jsonString)
-  } */
 
   return (
     <Provider store={store}>

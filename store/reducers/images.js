@@ -1,10 +1,9 @@
-import { feedData } from "../../data/dummy-data";
+//import { feedData } from "../../data/dummy-data";
 import { COMMENT_HANDLER, FETCH_COMMENTS, FETCH_DATA, LIKED_HANDLER, SAVED_HANDLER, SUBMIT_HANDLER } from "../actions/images";
 
 const initialState = {
-    feedData: feedData,
+    feedData: [],
     commentsData: []
-    //feedData: []
 }
 
 export default (state = initialState, action) => {
@@ -51,7 +50,7 @@ export default (state = initialState, action) => {
         let index = updatedFeedData.findIndex(feed => feed.id === action.imageId);
         let comments = [...imageData.comments] ? imageData.comments : [];
         comments.push({
-            id: new Date().toString(),
+            id: action.id,
             username: action.userId,
             comments: action.comments,
             isLiked: false
@@ -99,7 +98,7 @@ export default (state = initialState, action) => {
     else if (action.type === SUBMIT_HANDLER) {
         const updatedFeedData = [...state.feedData];
         updatedFeedData.push({
-            id: new Date().toString(),
+            id: action.id,
             imageUrl: action.imageUrls,
             description: action.description,
             username: action.userId,

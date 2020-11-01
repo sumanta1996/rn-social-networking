@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { StyleSheet, View, Text, Button, Platform, Alert, Image, ScrollView, KeyboardAvoidingView, TextInput } from 'react-native';
+import { StyleSheet, View, Text, Button, Platform, Alert, Image, ScrollView, KeyboardAvoidingView, TextInput, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useDispatch, useSelector } from 'react-redux';
 import { submitImages } from '../store/actions/images';
+import firebase from "firebase";
 
 const UploadPhotosScreen = props => {
     const [imageUrl, setImageUrl] = useState([]);
-    const [description, setDescription] = useState('')
+    const [description, setDescription] = useState('');
+    const [loader, setLoader] = useState(false);
     const user = useSelector(state => state.user.loggedInUserdata);
     const dispatch = useDispatch();
     useEffect(() => {
@@ -35,13 +37,33 @@ const UploadPhotosScreen = props => {
         }
     }
 
+    const imageUploadHandler = async () => {
+        const uploadedImageUrls = [];
+        for (let key in imageUrl) {
+            try {
+                const response = await fetch(imageUrl[key]);
+                const blob = await response.blob();
+                const ref = firebase.storage().ref().child('social/' + imageUrl[key].split('/').pop());
+                await ref.put(blob);
+                const url = await ref.getDownloadURL();
+                uploadedImageUrls.push(url);
+            } catch (err) {
+                console.log(err);
+                return;
+            }
+        }
+        return uploadedImageUrls;
+    }
+
     const addPostHandler = useCallback(async () => {
-        await dispatch(submitImages(imageUrl, description, user.username));
+        setLoader(true);
+        const uploadedImageUrls = await imageUploadHandler();
+        await dispatch(submitImages(uploadedImageUrls, description, user.username));
+        setLoader(false);
         props.navigation.goBack();
-        //dispatch(submitHandlerUser());
     });
 
-    return <KeyboardAvoidingView behavior="height" keyboardVerticalOffset={10} style={{flex: 1}}>
+    return <KeyboardAvoidingView behavior="height" keyboardVerticalOffset={10} style={{ flex: 1 }}>
         <ScrollView style={{ flex: 1 }}>
             <View style={styles.screen}>
                 {imageUrl.length === 0 ? <View style={styles.buttonContainer}>
@@ -52,7 +74,7 @@ const UploadPhotosScreen = props => {
                 <View style={styles.postDetailsContainer}>
                     <Text style={styles.text}>Post Details</Text>
                     <TextInput style={styles.input} placeholder="Enter description" multiline value={description} onChangeText={text => setDescription(text)} />
-                    <Button title="Add Post" color="green" onPress={addPostHandler} />
+                    {loader? <ActivityIndicator size="small" color="green" />:<Button title="Add Post" color="green" onPress={addPostHandler} disabled={imageUrl.length === 0} />}
                 </View>
             </View>
         </ScrollView>
