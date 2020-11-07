@@ -6,6 +6,7 @@ import AppNavigator from './navigation/AppNavigator';
 import UserData from './store/reducers/user';
 import ImagesData from './store/reducers/images';
 import NotificationData from './store/reducers/notification';
+import Messages from './store/reducers/messages';
 import { combineReducers, createStore, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux';
 import ActiveBar from './store/reducers/ActiveBar';
@@ -48,7 +49,8 @@ export default function App() {
     user: UserData,
     images: ImagesData,
     activeBar: ActiveBar,
-    notification: NotificationData
+    notification: NotificationData,
+    messages: Messages
   });
 
   const store = createStore(rootReducer, composeWithDevTools(applyMiddleware(ReduxThunk)));

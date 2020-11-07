@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, FlatList, TouchableNativeFeedback, ScrollView, Modal, ActivityIndicator, TouchableHighlight } from 'react-native';
+import { View, Text, Image, StyleSheet, FlatList, TouchableNativeFeedback, ScrollView, Modal, ActivityIndicator, TouchableHighlight, PanResponder } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import ImageTile from '../components/ImageTile';
 import { notificationCreator } from '../store/actions/notification';
@@ -19,7 +19,9 @@ const UserProfile = props => {
     const userDatabase = useSelector(state => state.user.enitreUserDatabase);
     const feedData = useSelector(state => state.images.feedData);
     const isFollowing = props.isFollowing;
-    const loggedInUser = useSelector(state => state.user.loggedInUserdata)
+    const loggedInUser = useSelector(state => state.user.loggedInUserdata);
+
+    //Add pan responders here to refresh
 
     const fetchImageData = () => {
         setLoader(true);
@@ -87,6 +89,27 @@ const UserProfile = props => {
         }
     }
 
+    const messageHandler = () => {
+        const messageIdsLoggedIn = loggedInUser.messageIds? loggedInUser.messageIds: [];
+        const messageIdsProfile = user.messageIds? user.messageIds: [];
+        let conversationId;
+        messageIdsLoggedIn.map(each => {
+            messageIdsProfile.map(each1 => {
+                if(each === each1) {
+                    conversationId = each1;
+                }
+            })
+        })
+        console.log('conversationid: ', conversationId);
+        props.navigation.navigate('Conversation', {
+            username: user.username,
+            profileImage: user.profileImage,
+            userId: user.localId,
+            token: user.token,
+            conversationId: conversationId
+        })
+    }
+
     if (loader || !user) {
         return (
             <View style={styles.centered}>
@@ -127,7 +150,7 @@ const UserProfile = props => {
                             {refresh && <ActivityIndicator size="small" color="black" />}
                         </View>
                     </TouchableHighlight>
-                    <TouchableHighlight style={styles.messageButton} onPress={() => { }}>
+                    <TouchableHighlight  style={styles.messageButton} onPress={messageHandler}>
                         <Text>Message</Text>
                     </TouchableHighlight>
                 </View> : null}

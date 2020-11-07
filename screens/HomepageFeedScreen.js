@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, StyleSheet, FlatList, Text, PanResponder } from 'react-native';
+import { View, StyleSheet, FlatList, Text, PanResponder, AsyncStorage } from 'react-native';
 import { HeaderButtons, Item } from 'react-navigation-header-buttons';
 import { useDispatch, useSelector } from 'react-redux';
 import CardView from '../components/CardView';
@@ -9,6 +9,8 @@ import { fetchNotifications, notificationCreator } from '../store/actions/notifi
 import LayoutScreen from './LayoutScreen';
 import * as Notifications from 'expo-notifications';
 import { setActivity } from '../store/actions/ActiveBar';
+import { fetchMessagesIdSpecific } from '../store/actions/messages';
+import { fetchUserData, pushMessagesidsToLoggedInUser } from '../store/actions/user';
 
 export let flatListRef;
 let moveToIndex = true;
@@ -24,10 +26,28 @@ const HomepageFeedScreen = props => {
     const [filteredData, setFilteredData] = useState(props.navigation.getParam('userData') ? props.navigation.getParam('userData') : []);
     moveToIndex = userDataFromProfile ? true : false;
 
-    const notificationRecievedHandler = notification => {
+    const [panResponder, setPanResponder] = useState(PanResponder.create({
+        onMoveShouldSetPanResponder: (event, gestureState) => true,
+        onPanResponderMove: (event, gestureState) => {
+            if (gestureState.dx < -30) {
+                props.navigation.navigate('DirectMessages');
+            }
+        }
+    }));
+
+    const notificationRecievedHandler = useCallback(async notification => {
         console.log('Triggered Notifications');
-        dispatch(fetchNotifications());
-    }
+        if (notification.request.content.title !== 'Message') {
+            dispatch(fetchNotifications());
+            dispatch(fetchUserData(loggedInUser.localId, true));
+        } else {
+            const id = notification.request.content.data.conversationId;
+            if (id) {
+                dispatch(fetchMessagesIdSpecific(id, true));
+                dispatch(pushMessagesidsToLoggedInUser(id));
+            }
+        }
+    })
 
     const actionOnNotificationHandler = notification => {
         if (notifications.length === 0) {
@@ -129,7 +149,7 @@ const HomepageFeedScreen = props => {
 
     if (!filteredData) {
         return <LayoutScreen navigation={props.navigation}>
-            <View style={styles.centered}>
+            <View style={styles.centered} {...panResponder.panHandlers}>
                 <Text>No posts yet. Add some.</Text>
             </View>
         </LayoutScreen>
@@ -144,7 +164,7 @@ const HomepageFeedScreen = props => {
     }
 
     return <LayoutScreen navigation={props.navigation}>
-        <View style={{ marginBottom: 50 }}>
+        <View style={{ marginBottom: 50 }} {...panResponder.panHandlers}>
             <FlatList ref={ref => { flatListRef = ref }} initialNumToRender={filteredData.length} onScrollToIndexFailed={err => {
                 console.log(err);
                 flatListRef.scrollToOffset({ animated: true, offset: 660 * (+indexToStart) });
@@ -154,7 +174,9 @@ const HomepageFeedScreen = props => {
 }
 
 HomepageFeedScreen.navigationOptions = navData => {
-    const isImageDetails = !!navData.navigation.getParam('userData')
+    const isImageDetails = !!navData.navigation.getParam('userData');
+    const number = navData.navigation.getParam('noti');
+
     return {
         headerTitle: isImageDetails ? 'Posts' : 'Homepage',
         headerTintColor: '#ff6f00',
@@ -162,7 +184,10 @@ HomepageFeedScreen.navigationOptions = navData => {
 
             return !isImageDetails ? <HeaderButtons HeaderButtonComponent={HeaderButton}>
                 <Item iconName="md-search" title="Search" onPress={() => navData.navigation.navigate('Search')} />
-                <Item iconName="md-notifications-outline" title="Direct Messages" onPress={() => navData.navigation.navigate('DirectMessages')} />
+                <Item iconName="md-chatbubbles" title="Direct Messages" onPress={() => navData.navigation.navigate('DirectMessages')} />
+                {number > 0 && <View style={styles.notificationNumber}>
+                    <Text style={{ color: 'white' }}>{number}</Text>
+                </View>}
             </HeaderButtons> : null
         }
     }
@@ -183,6 +208,17 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 0,
         backgroundColor: 'white'
+    },
+    notificationNumber: {
+        position: 'absolute',
+        right: -8,
+        top: -10,
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        backgroundColor: '#DC143C',
+        margin: 5,
+        paddingHorizontal: 5
     }
 })
 

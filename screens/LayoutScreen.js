@@ -1,6 +1,6 @@
 import { Ionicons, MaterialIcons, SimpleLineIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableNativeFeedback, PanResponder, Dimensions, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableNativeFeedback, Dimensions, Animated } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActivity } from '../store/actions/ActiveBar';
 import { setNoNewNotification } from '../store/actions/notification';
@@ -14,14 +14,6 @@ const LayoutScreen = props => {
     const active = useSelector(state => state.activeBar.active);
     const newNotification = useSelector(state => state.notification.newNotification);
     const dispatch = useDispatch();
-    const [panResponder, setPanResponder] = useState(PanResponder.create({
-        onMoveShouldSetPanResponder: (event, gestureState) => true,
-        onPanResponderMove: (event, gestureState) => {
-           if(gestureState.dx< -30) {
-            props.navigation.navigate('DirectMessages');
-           }
-        }
-    }));
 
     const activeHandler = async screenName => {
         if (screenName === AddPhotos) {
@@ -46,25 +38,25 @@ const LayoutScreen = props => {
             }
         }
     } */
-
+    //{...panResponder.panHandlers}
     return (
-        <View style={styles.screen} {...panResponder.panHandlers}>
+        <View style={styles.screen}>
             {props.children}
             <View style={styles.bottomBar}>
-                <TouchableNativeFeedback onPress={activeHandler.bind(this, Homepage)}>
+                <TouchableNativeFeedback onPress={activeHandler.bind(this, Homepage)} style={styles.eachBar}>
                     {active === Homepage ? <Ionicons name="md-home" size={30} color="black" /> :
                         <SimpleLineIcons name="home" size={30} />}
                 </TouchableNativeFeedback>
-                <TouchableNativeFeedback onPress={activeHandler.bind(this, AddPhotos)}>
+                <TouchableNativeFeedback onPress={activeHandler.bind(this, AddPhotos)} style={styles.eachBar}>
                     <Ionicons name={"md-add-circle-outline"} size={30} />
                 </TouchableNativeFeedback>
-                <TouchableNativeFeedback onPress={activeHandler.bind(this, Activity)}>
+                <TouchableNativeFeedback onPress={activeHandler.bind(this, Activity)} style={styles.eachBar}>
                     <View>
                         <Ionicons name={active === Activity ? "md-heart" : "md-heart-empty"} size={30} />
                         {newNotification > 0 && <View style={styles.notificationDot}></View>}
                     </View>
                 </TouchableNativeFeedback>
-                <TouchableNativeFeedback onPress={activeHandler.bind(this, MyProfile)}>
+                <TouchableNativeFeedback onPress={activeHandler.bind(this, MyProfile)} style={styles.eachBar}>
                     <MaterialIcons name={active === MyProfile ? "person" : "person-outline"} size={30} />
                 </TouchableNativeFeedback>
             </View>
@@ -92,6 +84,10 @@ const styles = StyleSheet.create({
         borderRadius: 3,
         backgroundColor: 'red',
         marginLeft: 8
+    },
+    eachBar: {
+        width: '25%',
+        height: 50
     }
 })
 

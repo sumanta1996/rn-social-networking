@@ -24,6 +24,7 @@ import StartupScreen from '../screens/StartupScree';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActivity } from '../store/actions/ActiveBar';
 import ImageDetailsScreen from '../screens/ImageDetailsScreen';
+import ConversationScreen from '../screens/ConversationScreen';
 
 export let focusCount = 0;
 
@@ -33,6 +34,12 @@ const HomepageNavigator = createStackNavigator({
     SearchUser: SearchUserScreen,
     DirectMessages: {
         screen: DirectMessagesScreen,
+        navigationOptions: {
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+        }
+    },
+    Conversation: {
+        screen: ConversationScreen,
         navigationOptions: {
             cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
         }

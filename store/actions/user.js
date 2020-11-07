@@ -9,9 +9,11 @@ export const SEARCH_USERS = 'SEARCH_USERS';
 export const LOGIN = 'LOGIN';
 export const SET_LOGIN_DATA = 'SET_LOGIN_DATA';
 export const FETCH_ENTIRE_USER = 'FETCH_ENTIRE_USER';
+export const PUSH_MESSAGE_ID_LOGGED_IN = 'PUSH_MESSAGE_ID_LOGGED_IN';
 
 export const MERGE_TO_FOLLOWERS = 'MERGE_TO_FOLLOWERS';
 export const MERGE_TO_FOLLOWING = 'MERGE_TO_FOLLOWING';
+export const REMOVE_NEW_MESSAGE_ID = 'REMOVE_NEW_MESSAGE_ID';
 
 export const removeFollowers = (username, identifier, userTobeRemoved) => {
     return {
@@ -321,7 +323,8 @@ export const fetchEntireUserDatabase = () => {
                 following: resData[key].following,
                 followers: resData[key].followers,
                 status: resData[key].status,
-                token: resData[key].token
+                token: resData[key].token,
+                messageIds: resData[key].messageIds ? resData[key].messageIds : []
             })
         }
 
@@ -379,6 +382,45 @@ export const setPushToken = () => {
             dispatch({
                 type: SET_LOGIN_DATA,
                 loggedInUser: updatedLoggedInData
+            })
+        }
+    }
+}
+
+export const pushMessagesidsToLoggedInUser = conversationId => {
+    return {
+        type: PUSH_MESSAGE_ID_LOGGED_IN,
+        conversationId: conversationId
+    }
+}
+
+export const removeNewMessagesToUser = (messageId) => {
+    return async (dispatch, getState) => {
+        const loggedInUser = getState().user.loggedInUserdata;
+        const url = `https://rn-social-networking.firebaseio.com/users/${loggedInUser.localId}.json`;
+
+        const response = await fetch(url, {
+            method: 'GET'
+        });
+        const resData = await response.json();
+        const newMessageIds = resData.newMessageIds ? resData.newMessageIds : [];
+        if (newMessageIds.includes(messageId)) {
+            const index = newMessageIds.findIndex(each => each === messageId);
+            newMessageIds.splice(index, 1);
+
+            await fetch(url, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    newMessageIds: newMessageIds
+                })
+            })
+
+            dispatch({
+                type: REMOVE_NEW_MESSAGE_ID,
+                newMessageIds: newMessageIds
             })
         }
     }

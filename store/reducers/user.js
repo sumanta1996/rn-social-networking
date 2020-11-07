@@ -1,4 +1,4 @@
-import { ADD_FOLLOWING, FETCH_ENTIRE_USER, FETCH_USER_DATA, MERGE_TO_FOLLOWERS, MERGE_TO_FOLLOWING, REMOVE_FOLLOWERS, SEARCH_USERS, SET_LOGIN_DATA } from "../actions/user";
+import { ADD_FOLLOWING, FETCH_ENTIRE_USER, FETCH_USER_DATA, MERGE_TO_FOLLOWERS, MERGE_TO_FOLLOWING, PUSH_MESSAGE_ID_LOGGED_IN, REMOVE_FOLLOWERS, REMOVE_NEW_MESSAGE_ID, SEARCH_USERS, SET_LOGIN_DATA } from "../actions/user";
 import { SUBMIT_HANDLER } from "../actions/images";
 
 const initialState = {
@@ -82,6 +82,27 @@ export default (state = initialState, action) => {
                 ...state,
                 loggedInUserdata: updatedLoggedinUserData,
                 enitreUserDatabase: updatedEnitreUserDatabase
+            }
+        case PUSH_MESSAGE_ID_LOGGED_IN:
+            const updatedLoggin = { ...state.loggedInUserdata };
+            const messageids = updatedLoggin.messageIds? updatedLoggin.messageIds: [];
+            if (!messageids.includes(action.conversationId)) {
+                messageids.push(action.conversationId);
+                return {
+                    ...state,
+                    loggedInUserdata: {
+                        ...state.loggedInUserdata,
+                        messageIds: messageids
+                    }
+                }
+            }
+        case REMOVE_NEW_MESSAGE_ID: 
+            return {
+                ...state,
+                loggedInUserdata: {
+                    ...state.loggedInUserdata,
+                    newMessageIds: action.newMessageIds
+                }
             }
         default: return state;
     }
