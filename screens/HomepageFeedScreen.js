@@ -11,6 +11,7 @@ import * as Notifications from 'expo-notifications';
 import { setActivity } from '../store/actions/ActiveBar';
 import { fetchMessagesIdSpecific } from '../store/actions/messages';
 import { fetchUserData, pushMessagesidsToLoggedInUser } from '../store/actions/user';
+import ShareContentScreen from './ShareContentScreen';
 
 export let flatListRef;
 let moveToIndex = true;
@@ -26,10 +27,18 @@ const HomepageFeedScreen = props => {
     const [filteredData, setFilteredData] = useState(props.navigation.getParam('userData') ? props.navigation.getParam('userData') : []);
     moveToIndex = userDataFromProfile ? true : false;
 
+    const shouldMove = gestureState => {
+        if(gestureState.dx<-30) {
+            return true;
+        }else {
+            false;
+        }
+    }
+
     const [panResponder, setPanResponder] = useState(PanResponder.create({
-        onMoveShouldSetPanResponder: (event, gestureState) => true,
+        onMoveShouldSetPanResponder: (event, gestureState) => shouldMove(gestureState),
         onPanResponderMove: (event, gestureState) => {
-            if (gestureState.dx < -30) {
+            if (shouldMove(gestureState) === true) {
                 props.navigation.navigate('DirectMessages');
             }
         }
@@ -45,6 +54,7 @@ const HomepageFeedScreen = props => {
             if (id) {
                 dispatch(fetchMessagesIdSpecific(id, true));
                 dispatch(pushMessagesidsToLoggedInUser(id));
+                dispatch(fetchUserData(loggedInUser.localId, true));
             }
         }
     })
@@ -72,6 +82,14 @@ const HomepageFeedScreen = props => {
 
         Notifications.addNotificationResponseReceivedListener(actionOnNotificationHandler);
     }, []);
+
+    useEffect(() => {
+        if (loggedInUser.newMessageIds) {
+            props.navigation.setParams({
+                noti: loggedInUser.newMessageIds.length
+            })
+        }
+    }, [loggedInUser]);
 
     useEffect(() => {
         /* const fetchedFilteredData = !!userDataFromProfile ? userDataFromProfile : feedData ? feedData.filter(data => {
@@ -118,7 +136,7 @@ const HomepageFeedScreen = props => {
             return;
         }
         const user = userData.find(user => user.username === itemData.item.username);
-        return <CardView image={itemData.item.imageUrl} description={itemData.item.description} fullName={user.fullName} profileImage={user.profileImage} likedPeople={itemData.item.likedPeople.length}
+        return <CardView id={itemData.item.id} image={itemData.item.imageUrl} description={itemData.item.description} fullName={user.fullName} profileImage={user.profileImage} likedPeople={itemData.item.likedPeople.length}
             saved={itemData.item.savedBy.includes(loggedInUser.username)}
             onSave={(saved) => {
                 dispatch(saveHandler(itemData.item.id, loggedInUser.username, saved))

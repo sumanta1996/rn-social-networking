@@ -28,7 +28,8 @@ export default (state = initialState, action) => {
             updatedArr.push({
                 userId: action.userId,
                 message: action.message,
-                time: action.time
+                time: action.time,
+                isShare: action.isShare
             })
             updatedThread = {
                 ...updatedThread,

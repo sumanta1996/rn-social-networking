@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableHighlight, ActivityIndicator, Image, KeyboardAvoidingView, FlatList, Keyboard, Dimensions, TouchableWithoutFeedback } from 'react-native';
 //import { FlatList, ScrollView } from 'react-native-gesture-handler';
@@ -21,6 +22,7 @@ const ConversationScreen = props => {
     const [messageSentLoader, setMessageSentLoader] = useState(false);
     const [keyboardActive, setKeyboardActive] = useState(false);
     const [showTime, setShowTime] = useState();
+    const entireUserDatabase = useSelector(state => state.user.enitreUserDatabase);
 
     useEffect(() => {
         const listener1 = Keyboard.addListener('keyboardDidShow', () => setKeyboardActive(true));
@@ -60,17 +62,44 @@ const ConversationScreen = props => {
         }
     }
 
+    const componentToRender = (item) => {
+        let comp;
+        if (item.isShare) {
+            const user = entireUserDatabase.find(each => each.username === item.username);
+            comp = <View style={styles.imageMessage}>
+                <View style={styles.userData}>
+                    <Image style={styles.image} source={{ uri: user.profileImage }} />
+                    <Text style={{marginHorizontal: 10}}>{user.fullName}</Text>
+                </View>
+                <Image style={styles.imagePhoto} source={{ uri: item.imageUrl[0] }} />
+            </View>
+        } else {
+            comp = <Text style={styles.text}>{item.message}</Text>;
+        }
+
+        return comp;
+    }
+
+    const showImageHandler = itemData => {
+        const user = entireUserDatabase.find(each => each.username === itemData.item.username);
+        props.navigation.navigate('ImageData', {
+            image: itemData.item,
+            user: user,
+            isNotLoggedIn: true
+        });
+    }
+
     const renderDataHandler = itemData => {
         const time = new Date(itemData.item.time);
         const hours = time.getHours();
         const min = time.getMinutes();
         const displayTime = hours.toString() + ':' + min.toString();
         if (itemData.item.userId === loggedInUser.localId) {
-            return <TouchableWithoutFeedback onPress={showTimeHandler.bind(this, itemData.index)}>
+            return <TouchableWithoutFeedback onPress={itemData.item.isShare? showImageHandler.bind(this, itemData):showTimeHandler.bind(this, itemData.index)}>
                 <View style={{ flexGrow: 1 }}>
                     <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'flex-end' }}>
                         <View style={styles.right}>
-                            <Text style={styles.text}>{itemData.item.message}</Text>
+                            {componentToRender(itemData.item)}
                         </View>
                         {messageSentLoader && itemData.index === (conversationThread[conversationId].length - 1) && <ActivityIndicator size="small" color="black" />}
                     </View>
@@ -80,12 +109,12 @@ const ConversationScreen = props => {
                 </View>
             </TouchableWithoutFeedback>
         } else {
-            return <TouchableWithoutFeedback onPress={showTimeHandler.bind(this, itemData.index)}>
+            return <TouchableWithoutFeedback onPress={itemData.item.isShare? showImageHandler.bind(this, itemData):showTimeHandler.bind(this, itemData.index)}>
                 <View style={{ flexGrow: 1 }}>
                     <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center' }}>
                         <Image source={{ uri: profileImage }} style={styles.image} />
                         <View style={styles.left}>
-                            <Text style={styles.text}>{itemData.item.message}</Text>
+                            {componentToRender(itemData.item)}
                         </View>
                     </View>
                     <View style={{ width: '100%', paddingHorizontal: 50 }}>
@@ -111,6 +140,7 @@ const ConversationScreen = props => {
                 flatListRef.scrollToOffset({ animated: false, offset: Dimensions.get('window').height })
             }} />
         <View style={styles.conversationBox}>
+            <Ionicons size={23} color="black" onPress={() => { }} name="md-camera" />
             <TextInput style={styles.input} multiline onChangeText={text => setMessage(text)} value={message} />
             <TouchableHighlight onPress={sendMessageHandler}>
                 <Text>Send</Text>
@@ -149,8 +179,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingLeft: '10%',
-        paddingRight: '6%',
+        paddingHorizontal: '6%',
         backgroundColor: 'white'
     },
     input: {
@@ -185,6 +214,25 @@ const styles = StyleSheet.create({
     },
     text: {
         margin: 10
+    },
+    imagePhoto: {
+        width: '100%',
+        height: '80%',
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20
+    },
+    userData: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        height: '20%',
+        paddingHorizontal: 2,
+        paddingVertical: 10
+    },
+    imageMessage: {
+        maxWidth: Dimensions.get('window').width/2,
+        width: 200,
+        height: 200,
+        justifyContent: 'space-between'
     }
 })
 

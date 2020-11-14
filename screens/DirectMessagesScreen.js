@@ -47,7 +47,7 @@ const DirectMessagesScreen = props => {
 
     const conversationHandler = (user, conversationId, isNew) => {
         props.navigation.navigate('Conversation', {
-            username: user.username,
+            username: user.username, 
             profileImage: user.profileImage,
             userId: user.id,
             token: user.token,
@@ -73,6 +73,7 @@ const DirectMessagesScreen = props => {
         let timeDifference = (new Date() - new Date(itemData.item.data[itemData.item.data.length - 1].time)) / 1000;
         timeDifference /= (60 * 60);
         timeDifference = Math.abs(Math.round(timeDifference));
+        const message = itemData.item.data[itemData.item.data.length - 1].isShare? 'Sent an image': itemData.item.data[itemData.item.data.length - 1].message
 
         return <TouchableNativeFeedback onPress={conversationHandler.bind(this, userData, itemData.item.id, isNew)}>
             <View style={styles.eachRow}>
@@ -80,7 +81,7 @@ const DirectMessagesScreen = props => {
                 <View style={styles.profileData}>
                     <Text style={styles.user}>{userData.fullName}</Text>
                     <View style={{ flexDirection: 'row' }}>
-                        <Text style={styles.message}>{itemData.item.data[itemData.item.data.length - 1].message}</Text>
+                        <Text style={styles.message}>{message}</Text>
                         <Text style={{ ...styles.message, marginLeft: 20 }}>{timeDifference === 0 ? 'Now' : timeDifference.toString() + 'h'}</Text>
                         {isNew && <View style={styles.dot}></View>}
                     </View>

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, FlatList, TouchableNativeFeedback, ScrollView, Modal, ActivityIndicator, TouchableHighlight, PanResponder } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, Image, StyleSheet, FlatList, TouchableNativeFeedback, ScrollView, Modal, ActivityIndicator, TouchableHighlight, PanResponder, Animated, Dimensions } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import ImageTile from '../components/ImageTile';
 import { notificationCreator } from '../store/actions/notification';
@@ -22,6 +22,38 @@ const UserProfile = props => {
     const loggedInUser = useSelector(state => state.user.loggedInUserdata);
 
     //Add pan responders here to refresh
+    const [position, setPosition] = useState(new Animated.ValueXY());
+    const [showSpinner, setShowSpinner] = useState(false);
+    const [panResponder, setPanResponder] = useState(PanResponder.create({
+        onMoveShouldSetResponderCapture: () => true,
+        onMoveShouldSetPanResponder: (event, gestureState) => gestureState.dy > 10 ? true : false,
+        onPanResponderGrant: () => {
+            setPosition({ x: 0, y: 0 });
+        },
+        onPanResponderMove: (event, gestureState) => {
+            if (gestureState.dy < 150) {
+                if (showSpinner === false) {
+                    setShowSpinner(true);
+                }
+                setPosition({ x: 0, y: gestureState.dy })
+            }
+            Animated.event(null, {
+                dy: position.y,
+                useNativeDriver: true
+            })
+        },
+        onPanResponderRelease: () => {
+            position.flattenOffset();
+            fetchUserData();
+        }
+    }));
+
+    const fetchUserData = async () => {
+        await props.onRefresh();
+        setPosition({ x: 0, y: 0 });
+        setShowSpinner(false);
+    }
+
 
     const fetchImageData = () => {
         setLoader(true);
@@ -85,17 +117,17 @@ const UserProfile = props => {
             await dispatch(fetchEntireUserDatabase());
             setRefresh(false);
             dispatch(notificationCreator(props.user.localId, 'Following', loggedInUser.username + ' started following you.', 'Following',
-                    null, loggedInUser.localId));
+                null, loggedInUser.localId));
         }
     }
 
     const messageHandler = () => {
-        const messageIdsLoggedIn = loggedInUser.messageIds? loggedInUser.messageIds: [];
-        const messageIdsProfile = user.messageIds? user.messageIds: [];
+        const messageIdsLoggedIn = loggedInUser.messageIds ? loggedInUser.messageIds : [];
+        const messageIdsProfile = user.messageIds ? user.messageIds : [];
         let conversationId;
         messageIdsLoggedIn.map(each => {
             messageIdsProfile.map(each1 => {
-                if(each === each1) {
+                if (each === each1) {
                     conversationId = each1;
                 }
             })
@@ -119,63 +151,68 @@ const UserProfile = props => {
     }
 
     return (
-        <ScrollView style={styles.iconContainer}>
-            <View style={styles.profileDetails}>
-                <Image source={{ uri: user.profileImage }} style={styles.image} />
-                <View style={styles.userCounts}>
-                    <Text style={styles.textBold}>{user.posts}</Text>
-                    <Text style={styles.customFont}>Posts</Text>
-                </View>
-                <TouchableNativeFeedback onPress={followersFollowingHandler.bind(this, 'followers')}>
+        <View>
+            {showSpinner === true && <View style={styles.refreshSpinner}>
+                <ActivityIndicator size="small" color="black" />
+            </View>}
+            <Animated.ScrollView style={{ ...styles.iconContainer, transform: [{ translateX: position.x }, { translateY: position.y }] }} {...panResponder.panHandlers}>
+                <View style={styles.profileDetails}>
+                    <Image source={{ uri: user.profileImage }} style={styles.image} />
                     <View style={styles.userCounts}>
-                        <Text style={styles.textBold}>{user.followers.length}</Text>
-                        <Text style={styles.customFont}>Followers</Text>
+                        <Text style={styles.textBold}>{user.posts}</Text>
+                        <Text style={styles.customFont}>Posts</Text>
                     </View>
-                </TouchableNativeFeedback>
-                <TouchableNativeFeedback onPress={followersFollowingHandler.bind(this, 'following')}>
-                    <View style={styles.userCounts}>
-                        <Text style={styles.textBold}>{user.following.length}</Text>
-                        <Text style={styles.customFont}>Following</Text>
-                    </View>
-                </TouchableNativeFeedback>
-            </View>
-            <View style={styles.details}>
-                <Text style={{ fontFamily: 'open-sans-bold' }}>{user.fullName}</Text>
-                <Text>{user.status}</Text>
-                {user.username !== loggedInUser.username ? <View style={styles.buttons}>
-                    <TouchableHighlight style={styles.common} onPress={manageFollowHandler}>
-                        <View style={isFollowing === true ? styles.followingButton : styles.followButton}>
-                            {isFollowing === true && <Ionicons name="md-arrow-dropdown" size={22} color="black" />}
-                            <Text>{isFollowing === true ? 'Following' : 'Follow'}</Text>
-                            {refresh && <ActivityIndicator size="small" color="black" />}
+                    <TouchableNativeFeedback onPress={followersFollowingHandler.bind(this, 'followers')}>
+                        <View style={styles.userCounts}>
+                            <Text style={styles.textBold}>{user.followers.length}</Text>
+                            <Text style={styles.customFont}>Followers</Text>
                         </View>
-                    </TouchableHighlight>
-                    <TouchableHighlight  style={styles.messageButton} onPress={messageHandler}>
-                        <Text>Message</Text>
-                    </TouchableHighlight>
-                </View> : null}
-            </View>
-            <View style={styles.iconbars}>
-                <View style={styles.icons}>
-                    <Ionicons name="md-grid" size={30} onPress={iconTappedHandler.bind(this, 'grid')} />
-                    {active === 'grid' && <View style={styles.horizontalLine}></View>}
+                    </TouchableNativeFeedback>
+                    <TouchableNativeFeedback onPress={followersFollowingHandler.bind(this, 'following')}>
+                        <View style={styles.userCounts}>
+                            <Text style={styles.textBold}>{user.following.length}</Text>
+                            <Text style={styles.customFont}>Following</Text>
+                        </View>
+                    </TouchableNativeFeedback>
                 </View>
-                <View style={styles.icons}>
-                    <Ionicons name="md-people" size={30} onPress={iconTappedHandler.bind(this, 'people')} />
-                    {active === 'people' && <View style={styles.horizontalLine}></View>}
+                <View style={styles.details}>
+                    <Text style={{ fontFamily: 'open-sans-bold' }}>{user.fullName}</Text>
+                    <Text>{user.status}</Text>
+                    {user.username !== loggedInUser.username ? <View style={styles.buttons}>
+                        <TouchableHighlight style={styles.common} onPress={manageFollowHandler}>
+                            <View style={isFollowing === true ? styles.followingButton : styles.followButton}>
+                                {isFollowing === true && <Ionicons name="md-arrow-dropdown" size={22} color="black" />}
+                                <Text>{isFollowing === true ? 'Following' : 'Follow'}</Text>
+                                {refresh && <ActivityIndicator size="small" color="black" />}
+                            </View>
+                        </TouchableHighlight>
+                        <TouchableHighlight style={styles.messageButton} onPress={messageHandler}>
+                            <Text>Message</Text>
+                        </TouchableHighlight>
+                    </View> : null}
                 </View>
-            </View>
-            {showModal && url ? <Modal transparent={true} visible={showModal} animationType="fade">
-                <View style={styles.modal}>
-                    <View style={styles.modalLook}>
-                        <Image style={styles.imageContainer} source={{ uri: url }} />
+                <View style={styles.iconbars}>
+                    <View style={styles.icons}>
+                        <Ionicons name="md-grid" size={30} onPress={iconTappedHandler.bind(this, 'grid')} />
+                        {active === 'grid' && <View style={styles.horizontalLine}></View>}
+                    </View>
+                    <View style={styles.icons}>
+                        <Ionicons name="md-people" size={30} onPress={iconTappedHandler.bind(this, 'people')} />
+                        {active === 'people' && <View style={styles.horizontalLine}></View>}
                     </View>
                 </View>
-            </Modal> : null}
-            {active === 'grid' && <FlatList numColumns={3} data={images}
-                renderItem={itemData => <ImageTile image={itemData.item.imageUrl} onPress={imageDetailsHandler.bind(this, itemData.index)} onLongPress={modalHandler.bind(this, itemData.item.imageUrl[0])}
-                    onPressOut={pressOutHandler} />} />}
-        </ScrollView>
+                {showModal && url ? <Modal transparent={true} visible={showModal} animationType="fade">
+                    <View style={styles.modal}>
+                        <View style={styles.modalLook}>
+                            <Image style={styles.imageContainer} source={{ uri: url }} />
+                        </View>
+                    </View>
+                </Modal> : null}
+                {active === 'grid' && <FlatList numColumns={3} data={images}
+                    renderItem={itemData => <ImageTile image={itemData.item.imageUrl} onPress={imageDetailsHandler.bind(this, itemData.index)} onLongPress={modalHandler.bind(this, itemData.item.imageUrl[0])}
+                        onPressOut={pressOutHandler} />} />}
+            </Animated.ScrollView>
+        </View>
     )
 }
 
@@ -319,6 +356,11 @@ const styles = StyleSheet.create({
         borderRadius: 7,
         borderColor: '#ccc',
         borderWidth: 1
+    },
+    refreshSpinner: {
+        position: 'absolute',
+        top: 30,
+        left: Dimensions.get('window').width / 2
     }
 })
 

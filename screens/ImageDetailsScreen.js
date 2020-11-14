@@ -8,17 +8,19 @@ const ImageDetailsScreen = props => {
     const dispatch = useDispatch();
     const image = props.navigation.getParam('image');
     const user = props.navigation.getParam('user');
+    const isNotLoggedIn = props.navigation.getParam('isNotLoggedIn');
     const loggedInUser = useSelector(state => state.user.loggedInUserdata);
 
-    return <CardView image={image.imageUrl} description={image.description} fullName={loggedInUser.fullName} profileImage={loggedInUser.profileImage} likedPeople={image.likedPeople.length}
-        saved={image.savedBy.includes(loggedInUser.username)}
+    return <CardView image={image.imageUrl} description={image.description} fullName={isNotLoggedIn?user.fullName: loggedInUser.fullName} 
+        profileImage={isNotLoggedIn? user.profileImage: loggedInUser.profileImage} likedPeople={image.likedPeople.length}
+        saved={image.savedBy? image.savedBy.includes(loggedInUser.username): false}
         onSave={(saved) => {
             dispatch(saveHandler(image.id, loggedInUser.username, saved))
         }}
         onPress={() => props.navigation.navigate('UserProfile', {
             //user: user
             username: image.username,
-            id: loggedInUser.localId
+            id: isNotLoggedIn? user.id:loggedInUser.localId
         })}
         onLikesPress={() => {
             props.navigation.navigate('Likes', {

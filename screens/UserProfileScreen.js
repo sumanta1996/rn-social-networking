@@ -22,6 +22,11 @@ const UserProfileScreen = props => {
         })();
     }, []);
 
+    const fetchUserDataOnRefresh = async () => {
+        const username = props.navigation.getParam('id');
+        await dispatch(fetchUserData(username, false)); 
+    }
+
     if (loader || !userData) {
         return <View style={styles.centered}>
             <ActivityIndicator size="large" color="black" />
@@ -29,7 +34,8 @@ const UserProfileScreen = props => {
     } else {
         return (
             <LayoutScreen navigation={props.navigation}>
-                <UserProfile isLoggedIn={false} navigation={props.navigation} user={userData} isFollowing={loggedInUser.following.includes(username)?true:false} />
+                <UserProfile isLoggedIn={false} navigation={props.navigation} user={userData} 
+                isFollowing={loggedInUser.following.includes(username)?true:false} onRefresh={fetchUserDataOnRefresh} />
             </LayoutScreen>
         )
     }

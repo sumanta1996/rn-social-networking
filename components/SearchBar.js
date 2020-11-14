@@ -4,7 +4,7 @@ import { StyleSheet, TextInput, View } from 'react-native';
 
 const SearchBar = props => {
     return (
-        <View style={styles.search}>
+        <View style={{...styles.search, ...props.style}}>
             <View style={styles.icon}>
                 <Ionicons name="md-search" size={23} />
             </View>

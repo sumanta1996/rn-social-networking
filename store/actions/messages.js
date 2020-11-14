@@ -6,10 +6,11 @@ export const FETCH_NOTIFICATIONS = 'FETCH_NOTIFICATIONS';
 //conversationId if exist 
 //userId of the user we sending to
 //message content
-export const setMessages = (pushToken, conversationId, userId, message) => {
+export const setMessages = (pushToken, conversationId, userId, message, isShare) => {
     return async (dispatch, getState) => {
         const loggedInUser = getState().user.loggedInUserdata;
         const timestamp = new Date().toISOString();
+        const isImageShare = isShare ? isShare : null;
 
         if (conversationId) {
             dispatch({
@@ -17,7 +18,8 @@ export const setMessages = (pushToken, conversationId, userId, message) => {
                 id: conversationId,
                 userId: loggedInUser.localId,
                 message: message,
-                time: timestamp
+                time: timestamp,
+                isShare: isImageShare
             })
             const response = await fetch(`https://rn-social-networking.firebaseio.com/messages/${conversationId}.json`, {
                 method: 'POST',
@@ -27,7 +29,8 @@ export const setMessages = (pushToken, conversationId, userId, message) => {
                 body: JSON.stringify({
                     userId: loggedInUser.localId,
                     message: message,
-                    time: timestamp
+                    time: timestamp,
+                    isShare: isImageShare
                 })
             })
             if (response.ok) {
@@ -81,12 +84,45 @@ export const fetchMessagesIdSpecific = (messageId, isNew) => {
 
             for (let key in resData) {
                 if (counter === totalKeys - 1 && isNew) {
-                    messageData.push({
-                        ...resData[key],
-                        isNew: true
-                    });
+                    if (resData[key].isShare) {
+                        const feedResponse = await fetch(`https://rn-social-networking.firebaseio.com/feed/${resData[key].message}.json`, {
+                            method: 'GET'
+                        });
+                        if (feedResponse.ok) {
+                            const responseData = await feedResponse.json();
+                            messageData.push({
+                                ...responseData,
+                                isShare: true,
+                                isNew: true,
+                                id: resData[key].message,
+                                userId: resData[key].userId,
+                                time: resData[key].time
+                            })
+                        }
+                    } else {
+                        messageData.push({
+                            ...resData[key],
+                            isNew: true
+                        });
+                    }
                 } else {
-                    messageData.push(resData[key]);
+                    if (resData[key].isShare) {
+                        const feedResponse = await fetch(`https://rn-social-networking.firebaseio.com/feed/${resData[key].message}.json`, {
+                            method: 'GET'
+                        });
+                        if (feedResponse.ok) {
+                            const responseData = await feedResponse.json();
+                            messageData.push({
+                                ...responseData,
+                                isShare: true,
+                                id: resData[key].message,
+                                userId: resData[key].userId,
+                                time: resData[key].time
+                            })
+                        }
+                    } else {
+                        messageData.push(resData[key]);
+                    }
                 }
                 counter = counter + 1;
             }

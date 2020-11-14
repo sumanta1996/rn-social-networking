@@ -25,6 +25,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setActivity } from '../store/actions/ActiveBar';
 import ImageDetailsScreen from '../screens/ImageDetailsScreen';
 import ConversationScreen from '../screens/ConversationScreen';
+import ShareContentScreen from '../screens/ShareContentScreen';
 
 export let focusCount = 0;
 
@@ -38,6 +39,7 @@ const HomepageNavigator = createStackNavigator({
             cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
         }
     },
+    ImageData: ImageDetailsScreen,
     Conversation: {
         screen: ConversationScreen,
         navigationOptions: {

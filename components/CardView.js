@@ -1,12 +1,14 @@
 import { Ionicons, AntDesign, Fontisto } from '@expo/vector-icons';
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Image, TouchableWithoutFeedback, TouchableOpacity, Dimensions, FlatList, TouchableHighlight } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableWithoutFeedback, TouchableOpacity, Dimensions, FlatList, TouchableHighlight, Modal } from 'react-native';
+import ShareContentScreen from '../screens/ShareContentScreen';
 
 const CardView = props => {
     const [lastTap, setLastTap] = useState();
     const [isLiked, setIsLiked] = useState(props.isLiked);
     const [showHeart, setShowHeart] = useState(false);
     const [saved, setSaved] = useState(props.saved);
+    const [showModal, setShowModal] = useState(false);
     const { isItLiked } = props;
 
     const doubleTapHandler = () => {
@@ -51,6 +53,10 @@ const CardView = props => {
         return () => clearTimeout(timer);
     }, [isItLiked])
 
+    const shareModalHandler = () => {
+        setShowModal(!showModal);
+    }
+
     return (
         <View style={styles.card}>
             <TouchableWithoutFeedback onPress={props.onPress}>
@@ -91,13 +97,14 @@ const CardView = props => {
                         props.liked(!isLiked);
                     }} color={isLiked ? "red" : "black"} />
                     <Ionicons name="md-text" size={25} onPress={props.onComment} />
-                    <Ionicons name="md-share-alt" size={27} onPress={() => { }} />
+                    <Ionicons name="md-share-alt" size={27} onPress={shareModalHandler} />
                 </View>
                 <TouchableOpacity style={styles.save} onPress={savedHandler}>
                     {saved ? <Fontisto name="bookmark-alt" size={25} /> :
                         <Fontisto name="bookmark" size={25} />}
                 </TouchableOpacity>
             </View>
+            <ShareContentScreen imageId={props.id} visible={showModal} closeModal={() => setShowModal(false)} />
         </View>
     )
 }
