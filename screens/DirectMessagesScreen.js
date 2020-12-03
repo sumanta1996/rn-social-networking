@@ -28,7 +28,7 @@ const DirectMessagesScreen = props => {
         for (let key in conversationThread) {
             const index = updatedAllDatas.findIndex(eachData => eachData.id === key);
             if (index === -1) {
-                if (loggedInUser.messageIds.includes(key)) {
+                if (loggedInUser.messageIds && loggedInUser.messageIds.includes(key)) {
                     updatedAllDatas.push({
                         id: key,
                         data: conversationThread[key]
@@ -58,7 +58,7 @@ const DirectMessagesScreen = props => {
     const renderEachHandler = itemData => {
         const index = itemData.item.id.indexOf(loggedInUser.localId);
         const newMessageIds = loggedInUser.newMessageIds? loggedInUser.newMessageIds: [];
-        console.log(loggedInUser.newMessageIds);
+        //console.log(loggedInUser.newMessageIds);
         const isNew = newMessageIds.includes(itemData.item.id);
 
         let updatedId;
@@ -73,7 +73,7 @@ const DirectMessagesScreen = props => {
         let timeDifference = (new Date() - new Date(itemData.item.data[itemData.item.data.length - 1].time)) / 1000;
         timeDifference /= (60 * 60);
         timeDifference = Math.abs(Math.round(timeDifference));
-        const message = itemData.item.data[itemData.item.data.length - 1].isShare? 'Sent an image': itemData.item.data[itemData.item.data.length - 1].message
+        const message = itemData.item.data[itemData.item.data.length - 1].isShare? 'Shared an image': itemData.item.data[itemData.item.data.length - 1].isUpload? 'Sent an image': itemData.item.data[itemData.item.data.length - 1].message
 
         return <TouchableNativeFeedback onPress={conversationHandler.bind(this, userData, itemData.item.id, isNew)}>
             <View style={styles.eachRow}>
@@ -93,6 +93,10 @@ const DirectMessagesScreen = props => {
     if(reload) {
         return <View style={styles.centered}>
             <ActivityIndicator size="small" color="black" />
+        </View>
+    }else if(!allDatas || allDatas.length === 0) {
+        return <View style={styles.centered}>
+            <Text>Start a conversation!</Text>
         </View>
     }
 

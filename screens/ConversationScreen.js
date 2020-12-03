@@ -1,10 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableHighlight, ActivityIndicator, Image, KeyboardAvoidingView, FlatList, Keyboard, Dimensions, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableHighlight, ActivityIndicator, Image, KeyboardAvoidingView, FlatList, Keyboard, Dimensions, TouchableWithoutFeedback, Modal } from 'react-native';
 //import { FlatList, ScrollView } from 'react-native-gesture-handler';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMessagesIdSpecific, setMessages } from '../store/actions/messages';
 import { pushMessagesidsToLoggedInUser, removeNewMessagesToUser } from '../store/actions/user';
+import firebase from "firebase";
+import * as ImagePicker from 'expo-image-picker';
+
 let flatListRef;
 
 const ConversationScreen = props => {
@@ -23,14 +26,18 @@ const ConversationScreen = props => {
     const [keyboardActive, setKeyboardActive] = useState(false);
     const [showTime, setShowTime] = useState();
     const entireUserDatabase = useSelector(state => state.user.enitreUserDatabase);
+    const [modalImage, setModalImage] = useState();
 
     useEffect(() => {
         const listener1 = Keyboard.addListener('keyboardDidShow', () => setKeyboardActive(true));
         const listener2 = Keyboard.addListener('keyboardDidHide', () => setKeyboardActive(false));
         (async () => {
-            //setReload(true);
-            await dispatch(fetchMessagesIdSpecific(conversationId, false));
-            await dispatch(removeNewMessagesToUser(conversationId));
+            try {
+                await dispatch(fetchMessagesIdSpecific(conversationId, false));
+                await dispatch(removeNewMessagesToUser(conversationId));
+            } catch (err) {
+                console.log(err);
+            }
             setReload(false);
         })();
 
@@ -69,10 +76,12 @@ const ConversationScreen = props => {
             comp = <View style={styles.imageMessage}>
                 <View style={styles.userData}>
                     <Image style={styles.image} source={{ uri: user.profileImage }} />
-                    <Text style={{marginHorizontal: 10}}>{user.fullName}</Text>
+                    <Text style={{ marginHorizontal: 10 }}>{user.fullName}</Text>
                 </View>
                 <Image style={styles.imagePhoto} source={{ uri: item.imageUrl[0] }} />
             </View>
+        } else if (item.isUpload) {
+            comp = <Image source={{ uri: item.message }} style={styles.uploadPhoto} />
         } else {
             comp = <Text style={styles.text}>{item.message}</Text>;
         }
@@ -89,13 +98,43 @@ const ConversationScreen = props => {
         });
     }
 
+    const showUploadedImage = itemData => {
+        setModalImage(itemData.item.message);
+    }
+
+    const uploadImageHandler = async () => {
+        let result = await ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            quality: 1
+        });
+
+        if (!result.cancelled) {
+            const image = result.uri;
+            try {
+                setMessageSentLoader(true);
+                const response = await fetch(image);
+                const blob = await response.blob();
+                const ref = firebase.storage().ref().child('social/' + image.split('/').pop());
+                await ref.put(blob);
+                const url = await ref.getDownloadURL();
+                await dispatch(setMessages(pushToken, conversationId, userId, url, false, true));
+                setMessageSentLoader(false);
+            } catch (err) {
+                console.log(err);
+                return;
+            }
+        }
+    }
+
     const renderDataHandler = itemData => {
         const time = new Date(itemData.item.time);
         const hours = time.getHours();
         const min = time.getMinutes();
         const displayTime = hours.toString() + ':' + min.toString();
         if (itemData.item.userId === loggedInUser.localId) {
-            return <TouchableWithoutFeedback onPress={itemData.item.isShare? showImageHandler.bind(this, itemData):showTimeHandler.bind(this, itemData.index)}>
+            return <TouchableWithoutFeedback onPress={itemData.item.isShare ? showImageHandler.bind(this, itemData) :
+                itemData.item.isUpload ? showUploadedImage.bind(this, itemData) : showTimeHandler.bind(this, itemData.index)}>
                 <View style={{ flexGrow: 1 }}>
                     <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'flex-end' }}>
                         <View style={styles.right}>
@@ -109,7 +148,8 @@ const ConversationScreen = props => {
                 </View>
             </TouchableWithoutFeedback>
         } else {
-            return <TouchableWithoutFeedback onPress={itemData.item.isShare? showImageHandler.bind(this, itemData):showTimeHandler.bind(this, itemData.index)}>
+            return <TouchableWithoutFeedback onPress={itemData.item.isShare ? showImageHandler.bind(this, itemData) :
+                itemData.item.isUpload ? showUploadedImage.bind(this, itemData) : showTimeHandler.bind(this, itemData.index)}>
                 <View style={{ flexGrow: 1 }}>
                     <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center' }}>
                         <Image source={{ uri: profileImage }} style={styles.image} />
@@ -134,18 +174,24 @@ const ConversationScreen = props => {
     //keyboardActive === true ? {flexGrow: 1, justifyContent: 'flex-end', paddingBottom: height+65,}:styles.contentStyle
 
     return <KeyboardAvoidingView style={{ flexGrow: 1 }}>
-        <FlatList ref={ref => { flatListRef = ref }} data={conversationThread[conversationId]} renderItem={renderDataHandler} keyExtractor={(item, index) => index.toString()}
-            contentContainerStyle={StyleSheet.flatten([styles.contentStyle, keyboardActive === true ? { paddingBottom: 80 } : { paddingBottom: 65 }])}
-            onContentSizeChange={() => {
-                flatListRef.scrollToOffset({ animated: false, offset: Dimensions.get('window').height })
-            }} />
+        {conversationThread && conversationThread[conversationId] ?
+            <FlatList ref={ref => { flatListRef = ref }} data={conversationThread[conversationId]} renderItem={renderDataHandler} keyExtractor={(item, index) => index.toString()}
+                contentContainerStyle={StyleSheet.flatten([styles.contentStyle, keyboardActive === true ? { paddingBottom: 80 } : { paddingBottom: 65 }])}
+                onContentSizeChange={(w, h) => {
+                    flatListRef.scrollToOffset({ animated: false, offset: h })
+                }} /> : null}
         <View style={styles.conversationBox}>
-            <Ionicons size={23} color="black" onPress={() => { }} name="md-camera" />
+            <Ionicons size={23} color="black" onPress={uploadImageHandler} name="md-camera" />
             <TextInput style={styles.input} multiline onChangeText={text => setMessage(text)} value={message} />
             <TouchableHighlight onPress={sendMessageHandler}>
-                <Text>Send</Text>
+                <View style={{ height: '100%', justifyContent: 'center' }}>
+                    <Text>Send</Text>
+                </View>
             </TouchableHighlight>
         </View>
+        <Modal transparent={true} visible={!!modalImage} onRequestClose={() => setModalImage()}>
+            <Image style={styles.modalImage} source={{ uri: modalImage }} />
+        </Modal>
     </KeyboardAvoidingView>
 }
 
@@ -229,10 +275,19 @@ const styles = StyleSheet.create({
         paddingVertical: 10
     },
     imageMessage: {
-        maxWidth: Dimensions.get('window').width/2,
+        maxWidth: Dimensions.get('window').width / 2,
         width: 200,
         height: 200,
         justifyContent: 'space-between'
+    },
+    uploadPhoto: {
+        width: 200,
+        height: 200,
+        borderRadius: 20
+    },
+    modalImage: {
+        width: '100%',
+        height: '100%'
     }
 })
 

@@ -1,9 +1,14 @@
+import { updateLoggedInUserStories } from "./user";
+
 export const LIKED_HANDLER = 'LIKED_HANDLER';
 export const COMMENT_HANDLER = 'COMMENT_HANDLER';
 export const SAVED_HANDLER = 'SAVED_HANDLER';
 export const SUBMIT_HANDLER = 'SUBMIT_HANDLER';
 export const FETCH_DATA = 'FETCH_DATA';
 export const FETCH_COMMENTS = 'FETCH_COMMENTS';
+export const FETCH_STORIES = 'FETCH_STORIES';
+export const FETCH_STORIES_SPECIFIC = 'FETCH_STORIES_SPECIFIC';
+export const UPDATE_STORIES_USER = 'UPDATE_STORIES_USER';
 
 export const likedHandler = (imageId, userId, isLiked) => {
     return async dispatch => {
@@ -210,5 +215,82 @@ export const fetchCommentsData = imageId => {
             type: FETCH_COMMENTS,
             fetchedCommentData: commentsData
         })
+    }
+}
+
+export const fetchStories = () => {
+    return async (dispatch, getState) => {
+        const resData = await fetch('https://rn-social-networking.firebaseio.com/stories.json', {
+            method: 'GET'
+        });
+
+        if (resData.ok) {
+            const loggedInUser = getState().user.loggedInUserdata;
+            const entireUserDatabase = getState().user.enitreUserDatabase;
+            //console.log(entireUserDatabase);
+            const response = await resData.json();
+            const stories = [];
+
+            for (let key in response) {
+                const user = entireUserDatabase.find(user => user.id === key);
+                if (loggedInUser.following && loggedInUser.following.includes(user.username)) {
+                    const story = [];
+                    for (let key1 in response[key]) {
+                        story.push({
+                            ...response[key][key1],
+                            id: key1
+                        })
+                    }
+                    stories.push({
+                        data: story,
+                        id: key
+                    });
+                }
+            }
+
+            dispatch({
+                type: FETCH_STORIES,
+                stories: stories
+            })
+        }
+    }
+}
+
+export const updateStoriesViewd = (userid, storyId) => {
+    return async (dispatch, getState) => {
+        const url = `https://rn-social-networking.firebaseio.com/stories/${userid}/${storyId}.json`;
+        let resData = await fetch(url, { method: 'GET' });
+        if (resData.ok) {
+            let response = await resData.json();
+            //console.log(response);
+            const loggedInUser = getState().user.loggedInUserdata;
+            const viewedStory = response.viewedStory ? response.viewedStory : [];
+            //console.log(viewedStory);
+            if (!viewedStory.includes(loggedInUser.localId)) {
+                viewedStory.push(loggedInUser.localId);
+                resData = await fetch(url, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        viewedStory: viewedStory
+                    })
+                })
+
+                if (resData.ok) {
+                    if (loggedInUser.localId === userid) {
+                        dispatch(updateLoggedInUserStories(userid, storyId, viewedStory));
+                    } else {
+                        dispatch({
+                            type: UPDATE_STORIES_USER,
+                            userid: userid,
+                            storyId: storyId,
+                            viewedStory: viewedStory
+                        })
+                    }
+                }
+            }
+        }
     }
 }

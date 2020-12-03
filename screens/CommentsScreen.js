@@ -95,9 +95,10 @@ const CommentsScreen = props => {
     }
 
     const pressHandler = username => {
-        //const user = userData.find(user => user.username === username);
+        const user = userData.find(user => user.username === username);
         props.navigation.navigate('UserProfile', {
-            username: username
+            username: username,
+            id: user.id
         })
     }
 

@@ -89,7 +89,8 @@ const UserProfile = props => {
         props.navigation.navigate('ImageDetails', {
             userData: images,
             index: index,
-            isLoggedIn: props.isLoggedIn
+            isLoggedIn: props.isLoggedIn,
+            hideBottomBar: true
         });
     }
 
@@ -142,6 +143,15 @@ const UserProfile = props => {
         })
     }
 
+    const editProfileHandler = () => {
+        props.navigation.navigate('EditProfile', {
+            fullName: user.fullName,
+            profileImage: user.profileImage,
+            status: user.status,
+            userId: user.localId
+        })
+    }
+
     if (loader || !user) {
         return (
             <View style={styles.centered}>
@@ -164,13 +174,13 @@ const UserProfile = props => {
                     </View>
                     <TouchableNativeFeedback onPress={followersFollowingHandler.bind(this, 'followers')}>
                         <View style={styles.userCounts}>
-                            <Text style={styles.textBold}>{user.followers.length}</Text>
+                            <Text style={styles.textBold}>{user.followers ? user.followers.length : 0}</Text>
                             <Text style={styles.customFont}>Followers</Text>
                         </View>
                     </TouchableNativeFeedback>
                     <TouchableNativeFeedback onPress={followersFollowingHandler.bind(this, 'following')}>
                         <View style={styles.userCounts}>
-                            <Text style={styles.textBold}>{user.following.length}</Text>
+                            <Text style={styles.textBold}>{user.following ? user.following.length : 0}</Text>
                             <Text style={styles.customFont}>Following</Text>
                         </View>
                     </TouchableNativeFeedback>
@@ -189,7 +199,11 @@ const UserProfile = props => {
                         <TouchableHighlight style={styles.messageButton} onPress={messageHandler}>
                             <Text>Message</Text>
                         </TouchableHighlight>
-                    </View> : null}
+                    </View> : <TouchableHighlight style={styles.buttons} onPress={editProfileHandler}>
+                            <View style={styles.editProfile}>
+                                <Text>Edit Profile</Text>
+                            </View>
+                        </TouchableHighlight>}
                 </View>
                 <View style={styles.iconbars}>
                     <View style={styles.icons}>
@@ -208,9 +222,12 @@ const UserProfile = props => {
                         </View>
                     </View>
                 </Modal> : null}
-                {active === 'grid' && <FlatList numColumns={3} data={images}
+
+                {active === 'grid' && images.length !== 0 ? <FlatList numColumns={3} data={images}
                     renderItem={itemData => <ImageTile image={itemData.item.imageUrl} onPress={imageDetailsHandler.bind(this, itemData.index)} onLongPress={modalHandler.bind(this, itemData.item.imageUrl[0])}
-                        onPressOut={pressOutHandler} />} />}
+                        onPressOut={pressOutHandler} />} /> : <View style={styles.noPost}>
+                        <Text>No posts yet. Add some</Text>
+                    </View>}
             </Animated.ScrollView>
         </View>
     )
@@ -361,6 +378,23 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 30,
         left: Dimensions.get('window').width / 2
+    },
+    editProfile: {
+        width: '93%',
+        height: '100%',
+        marginRight: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 7,
+        flexDirection: 'row',
+        borderColor: '#ccc',
+        borderWidth: 1
+    },
+    noPost: {
+        width: '100%',
+        height: 100,
+        justifyContent: 'center',
+        alignItems: 'center'
     }
 })
 

@@ -1,9 +1,10 @@
 //import { feedData } from "../../data/dummy-data";
-import { COMMENT_HANDLER, FETCH_COMMENTS, FETCH_DATA, LIKED_HANDLER, SAVED_HANDLER, SUBMIT_HANDLER } from "../actions/images";
+import { COMMENT_HANDLER, FETCH_COMMENTS, FETCH_DATA, FETCH_STORIES, LIKED_HANDLER, SAVED_HANDLER, SUBMIT_HANDLER, UPDATE_STORIES_USER } from "../actions/images";
 
 const initialState = {
     feedData: [],
-    commentsData: []
+    commentsData: [],
+    stories: []
 }
 
 export default (state = initialState, action) => {
@@ -110,10 +111,37 @@ export default (state = initialState, action) => {
             feedData: updatedFeedData
         }
     }
-    else if(action.type === FETCH_COMMENTS) {
+    else if (action.type === FETCH_COMMENTS) {
         return {
             ...state,
             commentsData: action.fetchedCommentData
+        }
+    }
+    else if (action.type === FETCH_STORIES) {
+        return {
+            ...state,
+            stories: action.stories
+        }
+    } else if (action.type === UPDATE_STORIES_USER) {
+        //console.log(state.stories);
+        let storyObj = state.stories.find(story => story.id === action.userid);
+        const index = state.stories.findIndex(story => story.id === action.userid);
+        let data = [...storyObj.data];
+        const indexStoryToUpdate = data.findIndex(each => each.id === action.storyId);
+        let dataModified = {...data[indexStoryToUpdate]};
+        dataModified = {...dataModified, viewedStory: action.viewedStory};
+        data[indexStoryToUpdate] = dataModified;
+        
+        storyObj = {
+            ...storyObj,
+            data: data
+        }
+        let updatedArr = [...state.stories];
+        updatedArr[index] = storyObj;
+
+        return {
+            ...state,
+            stories: updatedArr
         }
     }
     else {

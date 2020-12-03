@@ -43,21 +43,27 @@ const LayoutScreen = props => {
         <View style={styles.screen}>
             {props.children}
             <View style={styles.bottomBar}>
-                <TouchableNativeFeedback onPress={activeHandler.bind(this, Homepage)} style={styles.eachBar}>
-                    {active === Homepage ? <Ionicons name="md-home" size={30} color="black" /> :
-                        <SimpleLineIcons name="home" size={30} />}
+                <TouchableNativeFeedback onPress={activeHandler.bind(this, Homepage)}>
+                    <View style={styles.eachBar}>
+                        {active === Homepage ? <Ionicons name="md-home" size={30} color="black" /> :
+                            <SimpleLineIcons name="home" size={30} />}
+                    </View>
                 </TouchableNativeFeedback>
-                <TouchableNativeFeedback onPress={activeHandler.bind(this, AddPhotos)} style={styles.eachBar}>
-                    <Ionicons name={"md-add-circle-outline"} size={30} />
+                <TouchableNativeFeedback onPress={activeHandler.bind(this, AddPhotos)}>
+                    <View style={styles.eachBar}>
+                        <Ionicons name={"md-add-circle-outline"} size={30} />
+                    </View>
                 </TouchableNativeFeedback>
-                <TouchableNativeFeedback onPress={activeHandler.bind(this, Activity)} style={styles.eachBar}>
-                    <View>
+                <TouchableNativeFeedback onPress={activeHandler.bind(this, Activity)}>
+                    <View style={styles.eachBar}>
                         <Ionicons name={active === Activity ? "md-heart" : "md-heart-empty"} size={30} />
                         {newNotification > 0 && <View style={styles.notificationDot}></View>}
                     </View>
                 </TouchableNativeFeedback>
-                <TouchableNativeFeedback onPress={activeHandler.bind(this, MyProfile)} style={styles.eachBar}>
-                    <MaterialIcons name={active === MyProfile ? "person" : "person-outline"} size={30} />
+                <TouchableNativeFeedback onPress={activeHandler.bind(this, MyProfile)}>
+                    <View style={styles.eachBar}>
+                        <MaterialIcons name={active === MyProfile ? "person" : "person-outline"} size={30} />
+                    </View>
                 </TouchableNativeFeedback>
             </View>
         </View>
@@ -87,7 +93,9 @@ const styles = StyleSheet.create({
     },
     eachBar: {
         width: '25%',
-        height: 50
+        height: 50,
+        justifyContent: 'center',
+        alignItems: 'center'
     }
 })
 

@@ -1,12 +1,16 @@
 {
   "expo": {
-    "name": "rn-social-networking",
+    "name": "Social Networking",
     "slug": "rn-social-networking",
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/instaIcon.png",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/ionicons.jpg",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -16,6 +20,10 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "notification": {
+      "icon": "./assets/instaIcon.png",
+      "color": "#000000"
+    },
     "ios": {
       "supportsTablet": true
     },
@@ -23,7 +31,10 @@
       "favicon": "./assets/favicon.png"
     },
     "android": {
-      "useNextNotificationsApi": true
+      "useNextNotificationsApi": true,
+      "package": "com.networking.social",
+      "versionCode": 3,
+      "googleServicesFile": "./google-services.json"
     }
   }
 }

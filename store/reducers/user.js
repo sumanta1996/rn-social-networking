@@ -1,4 +1,4 @@
-import { ADD_FOLLOWING, FETCH_ENTIRE_USER, FETCH_USER_DATA, MERGE_TO_FOLLOWERS, MERGE_TO_FOLLOWING, PUSH_MESSAGE_ID_LOGGED_IN, REMOVE_FOLLOWERS, REMOVE_NEW_MESSAGE_ID, SEARCH_USERS, SET_LOGIN_DATA } from "../actions/user";
+import { ADD_FOLLOWING, FETCH_ENTIRE_USER, FETCH_STORY_LOGGEDIN, FETCH_USER_DATA, MERGE_TO_FOLLOWERS, MERGE_TO_FOLLOWING, PUSH_MESSAGE_ID_LOGGED_IN, PUSH_STORY_LOGGEDIN, REMOVE_FOLLOWERS, REMOVE_NEW_MESSAGE_ID, SEARCH_USERS, SET_LOGIN_DATA, UPDATE_STORY_LOGGEDIN } from "../actions/user";
 import { SUBMIT_HANDLER } from "../actions/images";
 
 const initialState = {
@@ -102,6 +102,45 @@ export default (state = initialState, action) => {
                 loggedInUserdata: {
                     ...state.loggedInUserdata,
                     newMessageIds: action.newMessageIds
+                }
+            }
+        case PUSH_STORY_LOGGEDIN:
+            const stories = [...state.loggedInUserdata.stories];
+            stories.push({
+                imageUrl: action.imageUrl,
+                time: new Date().toISOString(),
+                isNew: true,
+                id: action.id
+            });
+            return {
+                ...state,
+                loggedInUserdata: {
+                    ...state.loggedInUserdata,
+                    stories: stories
+                }
+            }
+        case FETCH_STORY_LOGGEDIN:
+            return {
+                ...state,
+                loggedInUserdata: {
+                    ...state.loggedInUserdata,
+                    stories: action.stories
+                }
+            }
+        case UPDATE_STORY_LOGGEDIN:
+            let updatedStories = [...state.loggedInUserdata.stories];
+            let storyGotUpdatedIndex = updatedStories.findIndex(story => story.id === action.storyid);
+            let storyGotUpdated = updatedStories[storyGotUpdatedIndex];
+            storyGotUpdated = {
+                ...storyGotUpdated,
+                viewedStory: action.viewedStory
+            }
+            updatedStories[storyGotUpdatedIndex] = storyGotUpdated;
+            return {
+                ...state,
+                loggedInUserdata: {
+                    ...state.loggedInUserdata,
+                    stories: updatedStories
                 }
             }
         default: return state;

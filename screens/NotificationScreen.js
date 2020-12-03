@@ -28,6 +28,13 @@ const NotificationScreen = props => {
         })
     }
 
+    const navigateToProfile = itemData => {
+        props.navigation.navigate('UserProfile', {
+            username: itemData.item.user.username,
+            id: itemData.item.user.id
+        });
+    }
+
     const manageFollowHandler = async (isFollowing, username, localId) => {
         if (isFollowing) {
             //If following then onPress remove from following list.
@@ -58,11 +65,11 @@ const NotificationScreen = props => {
             text = itemData.item.user.username + ' mentioned you in a photo.';
         } else if (itemData.item.type === 'Following') {
             text = itemData.item.user.username + ' started following you.';
-            if (loggedInUser.following.includes(itemData.item.user.username)) {
+            if (loggedInUser.following && loggedInUser.following.includes(itemData.item.user.username)) {
                 isFollowing = true;
             }
         }
-        return <TouchableNativeFeedback onPress={clickHandler.bind(this, itemData)}>
+        return <TouchableNativeFeedback onPress={itemData.item.type === 'Following'? navigateToProfile.bind(this, itemData): clickHandler.bind(this, itemData)}>
             <View style={styles.eachBar}>
                 <View style={styles.profileData}>
                     <Image source={{ uri: itemData.item.user.profileImage }} style={styles.image} />

@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useDispatch } from 'react-redux';
@@ -7,6 +8,7 @@ const AuthScreen = props => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [loader, setLoader] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [formValidity, setFormValidity] = useState(false);
     const dispatch = useDispatch();
 
@@ -36,10 +38,13 @@ const AuthScreen = props => {
     return (
         <View style={styles.screen}>
             <Text style={styles.heading}>Social Networking</Text>
-            <TextInput placeholder="Phone number,email address or username" keyboardType="email-address" style={styles.input} onChangeText={text => setUsername(text)} value={username} />
-            <TextInput placeholder="Password" keyboardType="visible-password" style={styles.input} onChangeText={text => setPassword(text)} value={password} />
+            <TextInput placeholder="Phone number,email address or username" autoCapitalize="none" keyboardType="email-address" style={styles.input} onChangeText={text => setUsername(text)} value={username} />
+            <View style={styles.input}>
+                <TextInput placeholder="Password" secureTextEntry={showPassword? false: true} onChangeText={text => setPassword(text)} value={password} style={{width: '90%'}} />
+                <Ionicons name={showPassword? "md-eye-off":"md-eye"} size={27} onPress={() => setShowPassword(!showPassword)} />
+            </View>
             <TouchableOpacity activeOpacity={0.4} style={formValidity ? styles.buttonEnable : styles.buttonDisable} onPress={loginHandler} disabled={!formValidity}>
-                {loader ? <ActivityIndicator color="black" size="small" /> : <Text style={formValidity? styles.login: styles.disabledLogin}>Login</Text>}
+                {loader ? <ActivityIndicator color="black" size="small" /> : <Text style={formValidity ? styles.login : styles.disabledLogin}>Login</Text>}
             </TouchableOpacity>
         </View>
     )
@@ -72,7 +77,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#ccc',
         margin: 10,
         padding: 10,
-        borderRadius: 5
+        borderRadius: 5,
+        flexDirection: 'row',
+        alignItems: 'center'
     },
     buttonEnable: {
         width: '90%',

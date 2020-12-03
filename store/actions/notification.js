@@ -179,7 +179,7 @@ export const setNoNewNotification = () => {
         });
         if (response.ok) {
             const resData = await response.json();
-            const notifications = resData.notifications;
+            const notifications = resData.notifications? resData.notifications: [];
             const updateNotificationData = [];
             notifications.map(each => {
                 if (each.isNew === true) {

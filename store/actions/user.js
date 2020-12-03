@@ -15,6 +15,10 @@ export const MERGE_TO_FOLLOWERS = 'MERGE_TO_FOLLOWERS';
 export const MERGE_TO_FOLLOWING = 'MERGE_TO_FOLLOWING';
 export const REMOVE_NEW_MESSAGE_ID = 'REMOVE_NEW_MESSAGE_ID';
 
+export const PUSH_STORY_LOGGEDIN = 'PUSH_STORY_LOGGEDIN';
+export const FETCH_STORY_LOGGEDIN = 'FETCH_STORY_LOGGEDIN';
+export const UPDATE_STORY_LOGGEDIN = 'UPDATE_STORY_LOGGEDIN';
+
 export const removeFollowers = (username, identifier, userTobeRemoved) => {
     return {
         type: REMOVE_FOLLOWERS,
@@ -423,6 +427,89 @@ export const removeNewMessagesToUser = (messageId) => {
                 newMessageIds: newMessageIds
             })
         }
+    }
+}
+
+export const editProfileHandler = (obj, id) => {
+    return async dispatch => {
+        //console.log('obj: ', obj);
+        try {
+            const response = await fetch(`https://rn-social-networking.firebaseio.com/users/${id}.json`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(obj)
+            })
+            console.log('response', response);
+        } catch (err) {
+            console.log(err)
+        }
+    }
+}
+
+export const uploadStories = (userid, imageUrl) => {
+    return async dispatch => {
+        const timestamp = new Date().toISOString();
+        const resData = await fetch(`https://rn-social-networking.firebaseio.com/stories/${userid}.json`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                imageUrl: imageUrl,
+                time: timestamp,
+                isNew: true
+            })
+        });
+        const response = await resData.json();
+        dispatch({
+            type: PUSH_STORY_LOGGEDIN,
+            imageUrl: imageUrl,
+            id: response.name
+        });
+    }
+}
+
+export const pushStoryToLoggedinuser = imageUrl => {
+    return {
+        type: PUSH_STORY_LOGGEDIN,
+        imageUrl: imageUrl
+    }
+}
+
+export const fetchLoggedinuserStories = () => {
+    return async (dispatch, getState) => {
+        const localId = getState().user.loggedInUserdata.localId;
+        const resData = await fetch(`https://rn-social-networking.firebaseio.com/stories/${localId}.json`, {
+            method: 'GET'
+        });
+
+        if (resData.ok) {
+            const response = await resData.json();
+            const stories = [];
+            for (let key in response) {
+                //console.log(response[key]);
+                stories.push({
+                    ...response[key],
+                    id: key
+                });
+            }
+
+            dispatch({
+                type: FETCH_STORY_LOGGEDIN,
+                stories: stories
+            })
+        }
+    }
+}
+
+export const updateLoggedInUserStories = (userid, storyid, viewedStory) => {
+    return {
+        type: UPDATE_STORY_LOGGEDIN,
+        userid: userid,
+        storyid: storyid,
+        viewedStory: viewedStory
     }
 }
 

@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "839969021166",
+    "firebase_url": "https://rn-social-networking.firebaseio.com",
+    "project_id": "rn-social-networking",
+    "storage_bucket": "rn-social-networking.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:839969021166:android:09bed3ee33d39cfb87a7ff",
+        "android_client_info": {
+          "package_name": "com.networking.social"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "839969021166-uu4rkb5jb99u918a1gi10rraevvmrqhi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAi5js-FZA9j_67CeX4WN9Y9PQGdpUY6Qo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "839969021166-uu4rkb5jb99u918a1gi10rraevvmrqhi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

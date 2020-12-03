@@ -35,7 +35,7 @@ const UserProfileScreen = props => {
         return (
             <LayoutScreen navigation={props.navigation}>
                 <UserProfile isLoggedIn={false} navigation={props.navigation} user={userData} 
-                isFollowing={loggedInUser.following.includes(username)?true:false} onRefresh={fetchUserDataOnRefresh} />
+                isFollowing={loggedInUser.following && loggedInUser.following.includes(username)?true:false} onRefresh={fetchUserDataOnRefresh} />
             </LayoutScreen>
         )
     }

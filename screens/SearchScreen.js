@@ -41,7 +41,7 @@ SearchScreen.navigationOptions = navData => {
                 <TouchableOpacity style={styles.icon} onPress={() => navData.navigation.goBack()}>
                     <Ionicons name="md-arrow-back" size={26} />
                 </TouchableOpacity>
-                <TouchableNativeFeedback onPress={() => navData.navigation.navigate('SearchUser')} style={styles.touchableArea}>
+                <TouchableNativeFeedback onPress={() => navData.navigation.navigate('SearchUser')}>
                     <View style={styles.headerStyles}>
                         <Ionicons name="md-search" size={26} style={{ paddingHorizontal: 20 }} />
                         <Text style={{ fontFamily: 'open-sans-bold' }}>Search</Text>
@@ -58,14 +58,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center'
     },
-    touchableArea: {
-        marginLeft: 20
-    },
     headerStyles: {
         flexDirection: 'row',
         width: 200,
-        height: 40,
-        alignItems: 'center'
+        height: '100%',
+        alignItems: 'center',
+        marginLeft: 20
     },
     icon: {
         alignItems: 'center',

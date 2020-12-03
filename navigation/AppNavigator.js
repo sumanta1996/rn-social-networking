@@ -26,6 +26,7 @@ import { setActivity } from '../store/actions/ActiveBar';
 import ImageDetailsScreen from '../screens/ImageDetailsScreen';
 import ConversationScreen from '../screens/ConversationScreen';
 import ShareContentScreen from '../screens/ShareContentScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
 
 export let focusCount = 0;
 
@@ -91,7 +92,8 @@ const MyProfileNavigator = createStackNavigator({
     ImageDetails: HomepageFeedScreen,
     Likes: LikeScreen,
     Saved: SavedScreen,
-    SavedPosts: SavedPostScreen
+    SavedPosts: SavedPostScreen,
+    EditProfile: EditProfileScreen
 });
 
 

@@ -27,16 +27,18 @@ const FollowersFollowingScreen = props => {
         const updatedUserList = [];
         const arrayToRender = active === 'followers' ? entireUserData.find(user => user.username === username).followers :
             entireUserData.find(user => user.username === username).following;
-        arrayToRender.map(each => {
-            const userDetail = entireUserData.find(user => user.username === each);
-            //console.log(userData.find(user => user.username === each));
-            /* updatedUserList.push({
-                username: userDetail.username,
-                fullName: userDetail.fullName,
-                profileImage: userDetail.profileImage
-            }); */
-            updatedUserList.push(userDetail);
-        });
+        if (arrayToRender) {
+            arrayToRender.map(each => {
+                const userDetail = entireUserData.find(user => user.username === each);
+                //console.log(userData.find(user => user.username === each));
+                /* updatedUserList.push({
+                    username: userDetail.username,
+                    fullName: userDetail.fullName,
+                    profileImage: userDetail.profileImage
+                }); */
+                updatedUserList.push(userDetail);
+            });
+        }
         setUserList(updatedUserList);
     }
 
@@ -59,7 +61,7 @@ const FollowersFollowingScreen = props => {
             await dispatch(fetchEntireUserDatabase());
             setRefresh();
             dispatch(notificationCreator(localId, 'Following', loggedinUser.username + ' started following you.', 'Following',
-                    null, loggedinUser.localId));
+                null, loggedinUser.localId));
 
         } else {
             //If following then onPress remove from following list.
@@ -123,13 +125,13 @@ const FollowersFollowingScreen = props => {
             <View style={styles.textContainer}>
                 <TouchableNativeFeedback onPress={toggleHandler.bind(this, 'followers')}>
                     <View style={styles.icon}>
-                        <Text style={active === 'followers' ? styles.activeText : styles.normalText}>{followers.length} followers</Text>
+                        <Text style={active === 'followers' ? styles.activeText : styles.normalText}>{followers ? followers.length : 0} followers</Text>
                         {active === 'followers' && <View style={styles.horizontalLine}></View>}
                     </View>
                 </TouchableNativeFeedback>
                 <TouchableNativeFeedback onPress={toggleHandler.bind(this, 'following')}>
                     <View style={styles.icon}>
-                        <Text style={active === 'following' ? styles.activeText : styles.normalText}>{following.length} following</Text>
+                        <Text style={active === 'following' ? styles.activeText : styles.normalText}>{following ? following.length : 0} following</Text>
                         {active === 'following' && <View style={styles.horizontalLine}></View>}
                     </View>
                 </TouchableNativeFeedback>
