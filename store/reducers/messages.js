@@ -30,7 +30,8 @@ export default (state = initialState, action) => {
                 message: action.message,
                 time: action.time,
                 isShare: action.isShare,
-                isUpload: action.isUpload
+                isUpload: action.isUpload,
+                repliedId: action.repliedId
             })
             updatedThread = {
                 ...updatedThread,

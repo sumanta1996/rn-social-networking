@@ -81,7 +81,7 @@ const HomepageFeedScreen = props => {
         if (!userDataFromProfile) {
             setIsRefreshing(true);
             await dispatch(fetchFeedData());
-            //await dispatch(fetchEntireUserDatabase());
+            await dispatch(fetchEntireUserDatabase());
             await dispatch(fetchNotifications());
             await dispatch(fetchLoggedinuserStories());
             await dispatch(fetchStories());

@@ -5,6 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useDispatch, useSelector } from 'react-redux';
 import { editProfileHandler, fetchUserData } from '../store/actions/user';
 import firebase from "firebase";
+import { fetchFeedData } from '../store/actions/images';
 
 const EditProfileScreen = props => {
     const [userid, setUserid] = useState(props.navigation.getParam('userId'));
@@ -76,6 +77,7 @@ const EditProfileScreen = props => {
         
         await dispatch(editProfileHandler(changedObj, userid));
         await dispatch(fetchUserData(userid, true));
+        //dispatch(fetchFeedData());
         setRefresh(false);
         props.navigation.goBack();
 

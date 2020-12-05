@@ -7,6 +7,7 @@ import { fetchMessagesIdSpecific, setMessages } from '../store/actions/messages'
 import { pushMessagesidsToLoggedInUser, removeNewMessagesToUser } from '../store/actions/user';
 import firebase from "firebase";
 import * as ImagePicker from 'expo-image-picker';
+import StoryViewerHandler from './StoryViewerHandler';
 
 let flatListRef;
 
@@ -27,6 +28,7 @@ const ConversationScreen = props => {
     const [showTime, setShowTime] = useState();
     const entireUserDatabase = useSelector(state => state.user.enitreUserDatabase);
     const [modalImage, setModalImage] = useState();
+    const [showModal, setShowModal] = useState();
 
     useEffect(() => {
         const listener1 = Keyboard.addListener('keyboardDidShow', () => setKeyboardActive(true));
@@ -82,6 +84,15 @@ const ConversationScreen = props => {
             </View>
         } else if (item.isUpload) {
             comp = <Image source={{ uri: item.message }} style={styles.uploadPhoto} />
+        } else if (item.storyUrl) {
+            comp = <View>
+                <View style={{ flexDirection: 'row' }}>
+                    <Ionicons size={26} name="md-share-alt" />
+                    <Text>Story replied</Text>
+                </View>
+                <Image source={{ uri: item.storyUrl }} style={styles.story} />
+                <Text style={styles.repliedMessage}>{item.message}</Text>
+            </View>
         } else {
             comp = <Text style={styles.text}>{item.message}</Text>;
         }
@@ -102,12 +113,18 @@ const ConversationScreen = props => {
         setModalImage(itemData.item.message);
     }
 
-    const uploadImageHandler = async () => {
-        let result = await ImagePicker.launchCameraAsync({
+    const uploadImageHandler = async isCamera => {
+        let result;
+        const options = {
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             quality: 1
-        });
+        };
+        if (isCamera === true) {
+            result = await ImagePicker.launchCameraAsync(options);
+        } else {
+            result = await ImagePicker.launchImageLibraryAsync(options);
+        }
 
         if (!result.cancelled) {
             const image = result.uri;
@@ -127,6 +144,27 @@ const ConversationScreen = props => {
         }
     }
 
+    const showStoryHandler = (item) => {
+        console.log(item);
+        const arr = item.repliedId.split("/");
+        const id = arr[0];
+        const storyId = arr[1];
+
+        const user = entireUserDatabase.find(user => user.id === id);
+        let storyObj = {
+            data: [{
+                id: storyId,
+                imageUrl: item.storyUrl
+            }],
+            id: id
+        }
+        setShowModal({
+            storyObj: storyObj,
+            indexStory: 0,
+            user: user
+        });
+    }
+
     const renderDataHandler = itemData => {
         const time = new Date(itemData.item.time);
         const hours = time.getHours();
@@ -134,7 +172,8 @@ const ConversationScreen = props => {
         const displayTime = hours.toString() + ':' + min.toString();
         if (itemData.item.userId === loggedInUser.localId) {
             return <TouchableWithoutFeedback onPress={itemData.item.isShare ? showImageHandler.bind(this, itemData) :
-                itemData.item.isUpload ? showUploadedImage.bind(this, itemData) : showTimeHandler.bind(this, itemData.index)}>
+                itemData.item.isUpload ? showUploadedImage.bind(this, itemData) : 
+                itemData.item.storyUrl? showStoryHandler.bind(this, itemData.item):showTimeHandler.bind(this, itemData.index)}>
                 <View style={{ flexGrow: 1 }}>
                     <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'flex-end' }}>
                         <View style={styles.right}>
@@ -149,7 +188,8 @@ const ConversationScreen = props => {
             </TouchableWithoutFeedback>
         } else {
             return <TouchableWithoutFeedback onPress={itemData.item.isShare ? showImageHandler.bind(this, itemData) :
-                itemData.item.isUpload ? showUploadedImage.bind(this, itemData) : showTimeHandler.bind(this, itemData.index)}>
+                itemData.item.isUpload ? showUploadedImage.bind(this, itemData) :
+                itemData.item.storyUrl? showStoryHandler.bind(this, itemData.item): showTimeHandler.bind(this, itemData.index)}>
                 <View style={{ flexGrow: 1 }}>
                     <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center' }}>
                         <Image source={{ uri: profileImage }} style={styles.image} />
@@ -181,17 +221,20 @@ const ConversationScreen = props => {
                     flatListRef.scrollToOffset({ animated: false, offset: h })
                 }} /> : null}
         <View style={styles.conversationBox}>
-            <Ionicons size={23} color="black" onPress={uploadImageHandler} name="md-camera" />
+            <Ionicons size={23} color="black" onPress={uploadImageHandler.bind(this, true)} name="md-camera" />
             <TextInput style={styles.input} multiline onChangeText={text => setMessage(text)} value={message} />
-            <TouchableHighlight onPress={sendMessageHandler}>
+            <TouchableHighlight activeOpacity={0.2} onPress={message.length === 0 ? uploadImageHandler.bind(this, false) : sendMessageHandler}>
                 <View style={{ height: '100%', justifyContent: 'center' }}>
-                    <Text>Send</Text>
+                    {message.length === 0 ? <Ionicons name="md-albums" size={26} /> :
+                        <Text>Send</Text>}
                 </View>
             </TouchableHighlight>
         </View>
         <Modal transparent={true} visible={!!modalImage} onRequestClose={() => setModalImage()}>
             <Image style={styles.modalImage} source={{ uri: modalImage }} />
         </Modal>
+        {showModal? <StoryViewerHandler showModal={!!showModal} closeModal={() => setShowModal()} storyObj={showModal.storyObj}
+                    profileImage={showModal.user.profileImage} username={showModal.user.username} indexStory={showModal.indexStory} />: null}
     </KeyboardAvoidingView>
 }
 
@@ -285,9 +328,17 @@ const styles = StyleSheet.create({
         height: 200,
         borderRadius: 20
     },
+    story: {
+        width: 150,
+        height: 200,
+        borderRadius: 20
+    },
     modalImage: {
         width: '100%',
         height: '100%'
+    },
+    repliedMessage: {
+        margin: 10
     }
 })
 

@@ -15,13 +15,15 @@ const DirectMessagesScreen = props => {
     //console.log(conversationThread);
 
     useEffect(() => {
-        (async () => {
-            setReload(true);
-            await dispatch(fetchAllMessages());
-            await dispatch(fetchUserData(loggedInUser.localId, true));
-            setReload(false);
-        })();
+        refreshHandler();
     }, []);
+
+    const refreshHandler = async () => {
+        setReload(true);
+        await dispatch(fetchAllMessages());
+        await dispatch(fetchUserData(loggedInUser.localId, true));
+        setReload(false);
+    }
 
     useEffect(() => {
         const updatedAllDatas = [...allDatas];
@@ -101,7 +103,7 @@ const DirectMessagesScreen = props => {
     }
 
     return (
-        <FlatList data={allDatas} renderItem={renderEachHandler} />
+        <FlatList data={allDatas} renderItem={renderEachHandler} onRefresh={refreshHandler} refreshing={reload} />
     )
 }
 

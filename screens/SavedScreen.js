@@ -6,7 +6,8 @@ const SavedScreen = props => {
     const allDatas = ['All Posts'];
     //const savedData = useSelector(state => state.user.saved);
     const feedData = useSelector(state => state.images.feedData);
-    const savedData = feedData.filter(feed => feed.savedBy.includes('r.das'));
+    const loggedInUser = useSelector(state => state.user.loggedInUserdata);
+    const savedData = feedData.filter(feed => feed.savedBy.includes(loggedInUser.username));
     /* useEffect(() => {
         let data = [];
         data = feedData.filter(feed => feed.savedBy.includes('r.das'));

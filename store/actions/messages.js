@@ -5,13 +5,14 @@ export const FETCH_NOTIFICATIONS = 'FETCH_NOTIFICATIONS';
 //pushToken of the message we sending to
 //conversationId if exist 
 //userId of the user we sending to
-//message content
-export const setMessages = (pushToken, conversationId, userId, message, isShare, isUpload) => {
+//message content 
+export const setMessages = (pushToken, conversationId, userId, message, isShare, isUpload, repliedStoryId) => {
     return async (dispatch, getState) => {
         const loggedInUser = getState().user.loggedInUserdata;
         const timestamp = new Date().toISOString();
         const isImageShare = isShare === true ? isShare : null;
-        const isImageUpload = isUpload === true ? isUpload: null;
+        const isImageUpload = isUpload === true ? isUpload : null;
+        const repliedId = repliedStoryId ? repliedStoryId : null;
 
         if (conversationId) {
             dispatch({
@@ -21,7 +22,8 @@ export const setMessages = (pushToken, conversationId, userId, message, isShare,
                 message: message,
                 time: timestamp,
                 isShare: isImageShare,
-                isUpload: isImageUpload
+                isUpload: isImageUpload,
+                repliedId: repliedId
             })
             const response = await fetch(`https://rn-social-networking.firebaseio.com/messages/${conversationId}.json`, {
                 method: 'POST',
@@ -33,14 +35,19 @@ export const setMessages = (pushToken, conversationId, userId, message, isShare,
                     message: message,
                     time: timestamp,
                     isShare: isImageShare,
-                    isUpload: isImageUpload
+                    isUpload: isImageUpload,
+                    repliedId: repliedId
                 })
             })
             if (response.ok) {
                 await setMessageIdToUser(userId, conversationId);
                 await setMessageIdToUser(loggedInUser.localId, conversationId);
                 await setNewMessagesToUser(userId, conversationId);
-                sendMessageNotification(pushToken, 'Message', loggedInUser.username + ' sends you a message', conversationId);
+                if (repliedId) {
+                    sendMessageNotification(pushToken, 'Message', loggedInUser.username + ' replied to your story.', conversationId);
+                } else {
+                    sendMessageNotification(pushToken, 'Message', loggedInUser.username + ' sends you a message', conversationId);
+                }
             }
 
         } else {
@@ -75,10 +82,11 @@ export const setMessages = (pushToken, conversationId, userId, message, isShare,
 }
 
 export const fetchMessagesIdSpecific = (messageId, isNew) => {
-    return async dispatch => {
+    return async (dispatch, getState) => {
+        const loggedInUser = getState().user.loggedInUserdata; 
         const response = await fetch(`https://rn-social-networking.firebaseio.com/messages/${messageId}.json`, {
             method: 'GET'
-        }); 
+        });
         if (response.ok) {
             const resData = await response.json();
             let messageData = [];
@@ -102,8 +110,20 @@ export const fetchMessagesIdSpecific = (messageId, isNew) => {
                                 time: resData[key].time
                             })
                         }
+                    }else if(resData[key].repliedId) {
+                        const storyData = await fetch(`https://rn-social-networking.firebaseio.com/stories/${loggedInUser.localId}/${resData[key].repliedId}.json`, {
+                            method: 'GET'
+                        });
+
+                        if(storyData.ok) {
+                            messageData.push({
+                                storyUrl: storyData.imageUrl,
+                                isNew: true,
+                                ...resData[key],
+                            });
+                        }
                     } else {
-                       
+
                         messageData.push({
                             ...resData[key],
                             isNew: true
@@ -123,6 +143,19 @@ export const fetchMessagesIdSpecific = (messageId, isNew) => {
                                 userId: resData[key].userId,
                                 time: resData[key].time
                             })
+                        }
+                    }else if(resData[key].repliedId) {
+                        const storyData = await fetch(`https://rn-social-networking.firebaseio.com/stories/${resData[key].repliedId}.json`, {
+                            method: 'GET'
+                        });
+
+                        if(storyData.ok) {
+                            const storyRes = await storyData.json();
+                            messageData.push({
+                                storyUrl: storyRes.imageUrl,
+                                isNew: true,
+                                ...resData[key],
+                            });
                         }
                     } else {
                         messageData.push(resData[key]);

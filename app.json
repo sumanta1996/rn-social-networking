@@ -10,7 +10,7 @@
     "orientation": "portrait",
     "icon": "./assets/instaIcon.png",
     "splash": {
-      "image": "./assets/ionicons.jpg",
+      "image": "./assets/ionicons.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

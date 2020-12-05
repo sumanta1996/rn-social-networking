@@ -6,7 +6,8 @@ import ImageTile from '../components/ImageTile';
 
 const SavedPostScreen = props => {
     const feedData = useSelector(state => state.images.feedData);
-    const images = feedData.filter(feed => feed.savedBy.includes('r.das'));
+    const loggedInUser = useSelector(state => state.user.loggedInUserdata);
+    const images = feedData.filter(feed => feed.savedBy.includes(loggedInUser.username));
     
     /* useEffect(() => {
         let data = [];
