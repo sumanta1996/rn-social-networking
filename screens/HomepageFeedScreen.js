@@ -69,12 +69,14 @@ const HomepageFeedScreen = props => {
         }
     })
 
-    const actionOnNotificationHandler = notification => {
-        if (notifications.length === 0) {
-            dispatch(fetchNotifications());
+    const actionOnNotificationHandler = event => {
+        console.log(event);
+        if (event.notification.request.content.title !== 'Message') {
+            dispatch(setActivity('NotificationFeed'));
+            props.navigation.navigate('Notification');
+        } else {
+            props.navigation.navigate('DirectMessages');
         }
-        dispatch(setActivity('NotificationFeed'));
-        props.navigation.navigate('Notification');
     }
 
     const refreshHandler = useCallback(async () => {
@@ -107,11 +109,11 @@ const HomepageFeedScreen = props => {
             })
         }
         let flag = false;
-        if(loggedInUser.stories) {
+        if (loggedInUser.stories) {
             loggedInUser.stories.map(story => {
-                if(!story.viewedStory) {
+                if (!story.viewedStory) {
                     flag = true;
-                }else if(!story.viewedStory.includes(loggedInUser.localId)) {
+                } else if (!story.viewedStory.includes(loggedInUser.localId)) {
                     flag = true;
                 }
             })
@@ -222,10 +224,10 @@ const HomepageFeedScreen = props => {
         setShowModal(id);
         //console.log(storyObjs);
         let storyKey;
-        
-        for(let key in storyObjs) {
-            const viewedStory = storyObjs[key].viewedStory? storyObjs[key].viewedStory: [];
-            if(!viewedStory.includes(loggedInUser.localId)) {
+
+        for (let key in storyObjs) {
+            const viewedStory = storyObjs[key].viewedStory ? storyObjs[key].viewedStory : [];
+            if (!viewedStory.includes(loggedInUser.localId)) {
                 setIndexStory(key);
                 storyKey = storyObjs[key].id;
                 break;
@@ -242,14 +244,14 @@ const HomepageFeedScreen = props => {
         const user = userData.find(user => user.id === itemData.item.id);
         let flag = false;
         itemData.item.data.map(story => {
-            if(!story.viewedStory) {
+            if (!story.viewedStory) {
                 flag = true;
-            }else if(!story.viewedStory.includes(loggedInUser.localId)) {
+            } else if (!story.viewedStory.includes(loggedInUser.localId)) {
                 flag = true;
             }
         });
         return <TouchableOpacity onPress={storyPressHandler.bind(this, itemData.item.id, itemData.item.data)}>
-            <View style={flag === true? styles.ring: {...styles.ring, borderColor: '#ccc'}}>
+            <View style={flag === true ? styles.ring : { ...styles.ring, borderColor: '#ccc' }}>
                 <Image style={styles.story} source={{ uri: user.profileImage }} />
                 {showModal && itemData.item.id === showModal && <StoryViewerHandler showModal={!!showModal} closeModal={() => setShowModal()} storyObj={itemData.item}
                     profileImage={user.profileImage} username={user.username} indexStory={indexStory} />}
@@ -277,7 +279,7 @@ const HomepageFeedScreen = props => {
         <ScrollView style={{ marginBottom: 50 }} {...panResponder.panHandlers} refreshControl={<RefreshControl onRefresh={refreshHandler} refreshing={isRefreshing} />}>
             <View style={{ flexDirection: 'row' }}>
                 <TouchableWithoutFeedback onPress={loggedInUser.stories && loggedInUser.stories.length > 0 ? storyPressHandler.bind(this, loggedInUser.localId, loggedInUser.stories) : uploadStoryHandler}>
-                    <View style={loggedInUser.stories && loggedInUser.stories.length > 0 ? storyViewedAll === true? styles.ringMyIcon : {...styles.ringMyIcon, borderColor: '#ccc'}:styles.marginMyIcon}>
+                    <View style={loggedInUser.stories && loggedInUser.stories.length > 0 ? storyViewedAll === true ? styles.ringMyIcon : { ...styles.ringMyIcon, borderColor: '#ccc' } : styles.marginMyIcon}>
                         <Image style={styles.myIcon} source={{ uri: loggedInUser.profileImage }} />
                         {loggedInUser.stories && loggedInUser.stories.length > 0 ? null : <View style={styles.plus}>
                             <Ionicons name="md-add" size={20} color="white" />
@@ -285,20 +287,20 @@ const HomepageFeedScreen = props => {
                         {storyLoader === true && <View style={styles.loader}>
                             <ActivityIndicator size="small" color="white" />
                         </View>}
-                        {showModal && loggedInUser.localId === showModal && <StoryViewerHandler showModal={!!showModal} closeModal={() => setShowModal()} storyObj={{data: loggedInUser.stories, id: loggedInUser.localId}}
+                        {showModal && loggedInUser.localId === showModal && <StoryViewerHandler showModal={!!showModal} closeModal={() => setShowModal()} storyObj={{ data: loggedInUser.stories, id: loggedInUser.localId }}
                             profileImage={loggedInUser.profileImage} username={loggedInUser.username} indexStory={indexStory} />}
                     </View>
                 </TouchableWithoutFeedback>
                 <FlatList horizontal showsHorizontalScrollIndicator={false} data={storiesData} renderItem={renderStoryHandler}
                     keyExtractor={item => item.id} />
             </View>
-            {!isRefreshing && (!filteredData || filteredData.length === 0)?  <View style={styles.centered}>
+            {!isRefreshing && (!filteredData || filteredData.length === 0) ? <View style={styles.centered}>
                 <Text>No posts yet. Add some.</Text>
-            </View>:
-            <FlatList ref={ref => { flatListRef = ref }} initialNumToRender={filteredData.length} onScrollToIndexFailed={err => {
-                console.log(err);
-                flatListRef.scrollToOffset({ animated: true, offset: 660 * (+indexToStart) });
-            }} data={filteredData} renderItem={renderCardHandler} />}
+            </View> :
+                <FlatList ref={ref => { flatListRef = ref }} initialNumToRender={filteredData.length} onScrollToIndexFailed={err => {
+                    console.log(err);
+                    flatListRef.scrollToOffset({ animated: true, offset: 660 * (+indexToStart) });
+                }} data={filteredData} renderItem={renderCardHandler} />}
         </ScrollView>
     </LayoutScreen>
 }
@@ -311,7 +313,7 @@ HomepageFeedScreen.navigationOptions = navData => {
     return {
         headerTitle: isImageDetails ? 'Posts' : 'Homepage',
         headerTintColor: '#ff6f00',
-        headerLeft: props => navData.navigation.getParam('hideBottomBar')? <HeaderBackButton  {...props} />: <Ionicons name="md-camera" size={26} style={{ paddingHorizontal: 10 }} onPress={uploadStory} />,
+        headerLeft: props => navData.navigation.getParam('hideBottomBar') ? <HeaderBackButton  {...props} /> : <Ionicons name="md-camera" size={26} style={{ paddingHorizontal: 10 }} onPress={uploadStory} />,
         headerRight: () => {
 
             return !isImageDetails ? <HeaderButtons HeaderButtonComponent={HeaderButton}>
@@ -328,7 +330,7 @@ HomepageFeedScreen.navigationOptions = navData => {
 const styles = StyleSheet.create({
     centered: {
         width: '100%',
-        height: Dimensions.get('window').height-200,
+        height: Dimensions.get('window').height - 200,
         justifyContent: 'center',
         alignItems: 'center'
     },

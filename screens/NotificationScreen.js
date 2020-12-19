@@ -68,7 +68,10 @@ const NotificationScreen = props => {
             if (loggedInUser.following && loggedInUser.following.includes(itemData.item.user.username)) {
                 isFollowing = true;
             }
+        } else if(itemData.item.type === 'Tagged') {
+            text = itemData.item.user.username + ' tagged you in a photo.'
         }
+
         return <TouchableNativeFeedback onPress={itemData.item.type === 'Following'? navigateToProfile.bind(this, itemData): clickHandler.bind(this, itemData)}>
             <View style={styles.eachBar}>
                 <View style={styles.profileData}>
@@ -82,7 +85,7 @@ const NotificationScreen = props => {
                         {refresh && refresh=== itemData.item.user.username && <ActivityIndicator size="small" color="black" />}
                     </View>
                 </TouchableHighlight> :
-                    <Image source={{ uri: itemData.item.image.imageUrl[0] }} style={styles.photo} />}
+                    <Image source={{ uri: itemData.item.image.imageUrl[0].uri }} style={styles.photo} />}
             </View>
         </TouchableNativeFeedback>
     }
@@ -95,7 +98,7 @@ const NotificationScreen = props => {
 
     return (
         <LayoutScreen navigation={props.navigation}>
-            <FlatList onRefresh={refreshHandler} refreshing={isRefresh} data={notifications} keyExtractor={(item, index) => index.toString()} renderItem={renderItemHandler} />
+            <FlatList style={{marginBottom: 50}} onRefresh={refreshHandler} refreshing={isRefresh} data={notifications} keyExtractor={(item, index) => index.toString()} renderItem={renderItemHandler} />
         </LayoutScreen>
 
     )

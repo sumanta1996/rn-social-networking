@@ -9,7 +9,9 @@ const CardView = props => {
     const [showHeart, setShowHeart] = useState(false);
     const [saved, setSaved] = useState(props.saved);
     const [showModal, setShowModal] = useState(false);
+    const [showTagged, setShowTagged] = useState(false);
     const { isItLiked } = props;
+    let secondTapRegistered = false;
 
     const doubleTapHandler = () => {
         if (!lastTap) {
@@ -20,6 +22,7 @@ const CardView = props => {
             setLastTap();
             //If time difference is less than 400ms then it's double tapped
             if (timeDifference < 400) {
+                secondTapRegistered = true;
                 console.log('Double Tapped');
                 setIsLiked(true);
                 setShowHeart(true);
@@ -27,6 +30,20 @@ const CardView = props => {
             }
         }
     }
+
+    useEffect(() => {
+        setTimeout(() => {
+            if (lastTap) {
+                if (secondTapRegistered) {
+                    secondTapRegistered = false;
+                } else {
+                    secondTapRegistered = false;
+                    setShowTagged(!showTagged);
+                    setLastTap();
+                }
+            }
+        }, 400);
+    }, [lastTap]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -65,11 +82,21 @@ const CardView = props => {
                     <Text style={styles.text}>{props.fullName}</Text>
                 </View>
             </TouchableWithoutFeedback>
-            <FlatList data={props.image} keyExtractor={item => item} horizontal pagingEnabled showsHorizontalScrollIndicator={false}
+            <FlatList data={props.image} keyExtractor={item => item.uri} horizontal pagingEnabled showsHorizontalScrollIndicator={false}
                 renderItem={(itemData) => {
                     return <TouchableHighlight activeOpacity={0.5} onPress={doubleTapHandler}>
                         <View>
-                            <Image key={itemData.item} style={styles.image} source={{ uri: itemData.item }} />
+                            <Image key={itemData.item} style={{ width: Dimensions.get('window').width, height: Dimensions.get('window').width }} source={{ uri: itemData.item.uri }} resizeMode="contain" />
+                            {itemData.item.taggedPeople && itemData.item.taggedPeople.length > 0 ? <Ionicons name="md-contact" size={20} style={styles.tagged} /> : null}
+                            {showTagged === true && itemData.item.taggedPeople && itemData.item.taggedPeople.length > 0 ?
+                                itemData.item.taggedPeople.map(tagged => {
+                                    return <React.Fragment key={tagged.id}>
+                                        <View style={{ ...styles.triangle, top: tagged.y, left: tagged.x }}></View>
+                                        <View style={{ ...styles.toast, top: tagged.y+6, left: tagged.x-10 }}>
+                                            <Text>{tagged.username}</Text>
+                                        </View>
+                                    </React.Fragment>
+                                }) : null}
                             {props.image.length > 1 &&
                                 <View style={styles.countContainer}>
                                     {props.image.map((data, index) => <View key={data} style={itemData.index === index ? styles.darkDot : styles.dotStyle}></View>)}
@@ -86,7 +113,7 @@ const CardView = props => {
             <View style={styles.descriptionContainer}>
                 <TouchableWithoutFeedback>
                     <Text>
-                        <Text style={{fontFamily: 'open-sans-bold', fontSize: 13}} onPress={props.onPress}>{props.fullName} </Text>
+                        <Text style={{ fontFamily: 'open-sans-bold', fontSize: 13 }} onPress={props.onPress}>{props.fullName} </Text>
                         {props.description}</Text>
                 </TouchableWithoutFeedback>
             </View>
@@ -113,7 +140,8 @@ const styles = StyleSheet.create({
     image: {
         //width: '100%',
         width: Dimensions.get('window').width,
-        height: 400
+        //height: 400,
+        //maxHeight: 400
     },
     card: {
         marginVertical: 20
@@ -189,6 +217,32 @@ const styles = StyleSheet.create({
         width: '100%',
         marginRight: 10,
         paddingHorizontal: 10
+    },
+    tagged: {
+        position: 'absolute',
+        left: 10,
+        bottom: 10
+    },
+    toast: {
+        padding: 5,
+        borderRadius: 7,
+        backgroundColor: '#ccc',
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'absolute'
+    },
+    triangle: {
+        width: 0,
+        height: 0,
+        backgroundColor: "transparent",
+        borderStyle: "solid",
+        borderLeftWidth: 5,
+        borderRightWidth: 5,
+        borderBottomWidth: 6,
+        borderLeftColor: "transparent",
+        borderRightColor: "transparent",
+        borderBottomColor: "#ccc",
+        position: 'absolute'
     }
 })
 

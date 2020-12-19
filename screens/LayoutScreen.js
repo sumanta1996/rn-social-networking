@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, TouchableNativeFeedback, Dimensions, Animated }
 import { useDispatch, useSelector } from 'react-redux';
 import { setActivity } from '../store/actions/ActiveBar';
 import { setNoNewNotification } from '../store/actions/notification';
+import * as ImagePicker from 'expo-image-picker';
 
 const Homepage = 'HomepageFeed';
 const Activity = 'NotificationFeed';
@@ -18,13 +19,31 @@ const LayoutScreen = props => {
     const activeHandler = async screenName => {
         if (screenName === AddPhotos) {
             dispatch(setActivity(Homepage));
+            await pickImage(screenName);
         } else {
             dispatch(setActivity(screenName));
             if (screenName === Activity) {
                 dispatch(setNoNewNotification());
             }
+
+            props.navigation.navigate(screenName);
         }
-        props.navigation.navigate(screenName);
+    }
+
+    const pickImage = async screenName => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 1
+        });
+
+        if (!result.cancelled) {
+            console.log(result);
+           props.navigation.navigate(screenName, {
+               imageObj: result
+           });
+        }
     }
 
     /* const getDirectionAndColor = ({ moveX, moveY, dx, dy }) => {

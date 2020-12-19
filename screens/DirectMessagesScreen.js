@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableNativeFeedback, ActivityIndicator } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllMessages } from '../store/actions/messages';
-import { fetchUserData } from '../store/actions/user';
+import { fetchLoggedinuserStories, fetchUserData } from '../store/actions/user';
 
 const DirectMessagesScreen = props => {
     const conversationThread = useSelector(state => state.messages.conversationThread);
@@ -22,6 +22,7 @@ const DirectMessagesScreen = props => {
         setReload(true);
         await dispatch(fetchAllMessages());
         await dispatch(fetchUserData(loggedInUser.localId, true));
+        dispatch(fetchLoggedinuserStories());
         setReload(false);
     }
 

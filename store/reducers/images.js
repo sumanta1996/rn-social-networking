@@ -98,7 +98,7 @@ export default (state = initialState, action) => {
     }
     else if (action.type === SUBMIT_HANDLER) {
         const updatedFeedData = [...state.feedData];
-        updatedFeedData.push({
+        updatedFeedData.unshift({
             id: action.id,
             imageUrl: action.imageUrls,
             description: action.description,

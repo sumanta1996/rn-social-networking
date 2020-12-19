@@ -10,14 +10,18 @@ const AuthScreen = props => {
     const [loader, setLoader] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [formValidity, setFormValidity] = useState(false);
+    const [err, setErr] = useState();
     const dispatch = useDispatch();
 
     useEffect(() => {
-        if (username !== '' && password !== '') {
+        if (username !== '' && password !== '' && password.length>=6) {
             setFormValidity(true);
         }
-        if (username === '' || password === '') {
+        if (username === '' || password === '' || password.length<6) {
             setFormValidity(false);
+        }
+        if(err) {
+            setErr();
         }
     }, [username, password]);
 
@@ -30,7 +34,8 @@ const AuthScreen = props => {
             await dispatch(setPushToken());
             props.navigation.navigate('Homepage');
         } catch (err) {
-            console.log(err);
+            console.log(err.message);
+            setErr(err.message);
         }
         setLoader(false);
     }
@@ -46,6 +51,7 @@ const AuthScreen = props => {
             <TouchableOpacity activeOpacity={0.4} style={formValidity ? styles.buttonEnable : styles.buttonDisable} onPress={loginHandler} disabled={!formValidity}>
                 {loader ? <ActivityIndicator color="black" size="small" /> : <Text style={formValidity ? styles.login : styles.disabledLogin}>Login</Text>}
             </TouchableOpacity>
+            {err? <Text style={{color: 'red'}}>{err}</Text>: null}
         </View>
     )
 }

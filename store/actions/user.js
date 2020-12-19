@@ -238,7 +238,7 @@ export const login = (email, password) => {
         if (!response.ok) {
             const errData = await response.json();
             let message = 'Something went wrong!'
-            if (errData.error.message === 'EMAIL_NOT_FOUND') {
+            if (errData.error.message === 'EMAIL_NOT_FOUND' || errData.error.message === 'INVALID_EMAIL') {
                 message = 'Please enter a valid email address.';
             } else if (errData.error.message === 'INVALID_PASSWORD') {
                 message = 'Please enter a valid password.';

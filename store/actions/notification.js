@@ -1,3 +1,5 @@
+import { fetchFeedData } from "./images";
+
 export const FETCH_NOTIFICATIONS = 'FETCH_NOTIFICATIONS';
 export const NO_NEW_NOTIFICATION = 'NO_NEW_NOTIFICATION';
 
@@ -116,7 +118,8 @@ export const fetchNotifications = () => {
     return async (dispatch, getState) => {
         const localId = getState().user.loggedInUserdata.localId;
         const enitreUserDatabase = getState().user.enitreUserDatabase;
-        const feedData = getState().images.feedData;
+        await dispatch(fetchFeedData());
+        let feedData = getState().images.feedData;
         let newNotification = 0;
         const response = await fetch(`https://rn-social-networking.firebaseio.com/users/${localId}.json`, {
             method: 'GET'
@@ -132,14 +135,25 @@ export const fetchNotifications = () => {
                 }
                 //Fetch Image Details
                 if (each.type !== 'Following') {
-                    feedData.map(feed => {
-                        if (feed.id === each.imageId) {
-                            pushedObject = {
-                                ...pushedObject,
-                                image: feed
+                    if (each.type === 'Tagged') {
+                        feedData.map(feed => {
+                            if (feed.id === each.imageId) {
+                                pushedObject = {
+                                    ...pushedObject,
+                                    image: feed
+                                }
                             }
-                        }
-                    })
+                        })
+                    } else {
+                        feedData.map(feed => {
+                            if (feed.id === each.imageId) {
+                                pushedObject = {
+                                    ...pushedObject,
+                                    image: feed
+                                }
+                            }
+                        })
+                    }
                 }
 
                 //Fetch User details
@@ -179,7 +193,7 @@ export const setNoNewNotification = () => {
         });
         if (response.ok) {
             const resData = await response.json();
-            const notifications = resData.notifications? resData.notifications: [];
+            const notifications = resData.notifications ? resData.notifications : [];
             const updateNotificationData = [];
             notifications.map(each => {
                 if (each.isNew === true) {

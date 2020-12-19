@@ -161,8 +161,10 @@ export const submitImages = (imageUrls, description, userId) => {
             id: resData.name,
             imageUrls: imageUrls,
             userId: userId,
-            description: description
+            description: description,
         })
+
+        return resData.name;
     }
 }
 
@@ -187,6 +189,8 @@ export const fetchFeedData = () => {
                 savedBy: response[key].savedBy ? response[key].savedBy : []
             })
         }
+        feedData.reverse();
+        
         dispatch({
             type: FETCH_DATA,
             feedData: feedData

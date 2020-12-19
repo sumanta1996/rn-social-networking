@@ -22,7 +22,7 @@ const ImageTile = props => {
                 {props.image.length > 1 && <View style={styles.album}>
                     <Ionicons name="md-albums" size={15} color="white" />
                 </View>}
-                <Image style={styles.image} source={{ uri: props.image[0] }} />
+                <Image style={styles.image} source={{ uri: props.image[0].uri }} />
             </View>
         </TouchableNativeFeedback>)
 }

@@ -80,7 +80,7 @@ const ConversationScreen = props => {
                     <Image style={styles.image} source={{ uri: user.profileImage }} />
                     <Text style={{ marginHorizontal: 10 }}>{user.fullName}</Text>
                 </View>
-                <Image style={styles.imagePhoto} source={{ uri: item.imageUrl[0] }} />
+                <Image style={styles.imagePhoto} source={{ uri: item.imageUrl[0].uri }} />
             </View>
         } else if (item.isUpload) {
             comp = <Image source={{ uri: item.message }} style={styles.uploadPhoto} />

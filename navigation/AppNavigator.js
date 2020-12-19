@@ -27,6 +27,7 @@ import ImageDetailsScreen from '../screens/ImageDetailsScreen';
 import ConversationScreen from '../screens/ConversationScreen';
 import ShareContentScreen from '../screens/ShareContentScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
+import TagPhotoScreen from '../screens/TagPhotoScreen';
 
 export let focusCount = 0;
 
@@ -52,7 +53,8 @@ const HomepageNavigator = createStackNavigator({
     Likes: LikeScreen,
     Comments: CommentsScreen,
     ImageDetails: HomepageFeedScreen,
-    AddPhotos: UploadPhotosScreen
+    AddPhotos: UploadPhotosScreen,
+    TagPhoto: TagPhotoScreen
 }, {
     navigationOptions: navData => {
         const isImageDetails = !!navData.navigation.getParam('userData')
