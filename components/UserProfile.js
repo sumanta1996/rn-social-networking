@@ -14,6 +14,7 @@ const UserProfile = props => {
     const [showModal, setShowModal] = useState(false);
     const [url, setUrl] = useState();
     const [loader, setLoader] = useState(false);
+    const [taggedPhotos, setTaggedPhotos] = useState([]);
     const dispatch = useDispatch();
     let user = props.user ? props.user : props.myProfile;
     const userDatabase = useSelector(state => state.user.enitreUserDatabase);
@@ -60,11 +61,30 @@ const UserProfile = props => {
         images = feedData.filter(image => image.username === user.username);
         setLoader(false);
     }
+
+    const fetchTaggedPhotos = () => {
+        const updatedData = feedData.filter(eachImage => {
+            for (let key in eachImage.imageUrl) {
+                const imageData = eachImage.imageUrl[key];
+                if (imageData.taggedPeople) {
+                    for (let key1 in imageData.taggedPeople) {
+                        return imageData.taggedPeople[key1].username === user.username;
+                    }
+                }else {
+                    return false;
+                }
+            }
+        });
+
+        setTaggedPhotos(updatedData);
+    }
+
     useEffect(() => {
         props.navigation.setParams({
             username: user.username
         });
         fetchImageData();
+        fetchTaggedPhotos();
         props.navigation.addListener('willFocus', () => {
             console.log('focused');
             fetchImageData();
@@ -87,7 +107,7 @@ const UserProfile = props => {
 
     const imageDetailsHandler = index => {
         props.navigation.navigate('ImageDetails', {
-            userData: images,
+            userData: active === 'grid'? images: taggedPhotos,
             index: index,
             isLoggedIn: props.isLoggedIn,
             hideBottomBar: true
@@ -223,11 +243,16 @@ const UserProfile = props => {
                     </View>
                 </Modal> : null}
 
-                {active === 'grid' && images.length !== 0 ? <FlatList numColumns={3} data={images}
+                {active === 'grid' ? images.length !== 0 ? <FlatList numColumns={3} data={images}
                     renderItem={itemData => <ImageTile image={itemData.item.imageUrl} onPress={imageDetailsHandler.bind(this, itemData.index)} onLongPress={modalHandler.bind(this, itemData.item.imageUrl[0])}
                         onPressOut={pressOutHandler} />} /> : <View style={styles.noPost}>
                         <Text>No posts yet. Add some</Text>
-                    </View>}
+                    </View>: null}
+                {active === 'people' ? taggedPhotos.length !== 0? <FlatList numColumns={3} data={taggedPhotos}
+                    renderItem={itemData => <ImageTile image={itemData.item.imageUrl} onPress={imageDetailsHandler.bind(this, itemData.index)} onLongPress={modalHandler.bind(this, itemData.item.imageUrl[0])}
+                        onPressOut={pressOutHandler} />} /> : <View style={styles.noPost}>
+                        <Text>No posts yet. Add some</Text>
+                    </View>: null}
             </Animated.ScrollView>
         </View>
     )
@@ -253,7 +278,8 @@ const styles = StyleSheet.create({
         width: '100%',
         flexDirection: 'row',
         justifyContent: 'space-between',
-        padding: 5
+        padding: 5,
+        marginRight: -8
     },
     userCounts: {
         width: '20%',

@@ -62,6 +62,7 @@ const HomepageFeedScreen = props => {
         } else {
             const id = notification.request.content.data.conversationId;
             if (id) {
+                dispatch(fetchEntireUserDatabase());
                 dispatch(fetchMessagesIdSpecific(id, true));
                 dispatch(pushMessagesidsToLoggedInUser(id));
                 dispatch(fetchUserData(loggedInUser.localId, true));
@@ -253,7 +254,7 @@ const HomepageFeedScreen = props => {
         return <TouchableOpacity onPress={storyPressHandler.bind(this, itemData.item.id, itemData.item.data)}>
             <View style={flag === true ? styles.ring : { ...styles.ring, borderColor: '#ccc' }}>
                 <Image style={styles.story} source={{ uri: user.profileImage }} />
-                {showModal && itemData.item.id === showModal && <StoryViewerHandler showModal={!!showModal} closeModal={() => setShowModal()} storyObj={itemData.item}
+                {showModal && itemData.item.id === showModal && <StoryViewerHandler navigation={props.navigation} showModal={!!showModal} closeModal={() => setShowModal()} storyObj={itemData.item}
                     profileImage={user.profileImage} username={user.username} indexStory={indexStory} />}
             </View>
         </TouchableOpacity>
@@ -287,7 +288,7 @@ const HomepageFeedScreen = props => {
                         {storyLoader === true && <View style={styles.loader}>
                             <ActivityIndicator size="small" color="white" />
                         </View>}
-                        {showModal && loggedInUser.localId === showModal && <StoryViewerHandler showModal={!!showModal} closeModal={() => setShowModal()} storyObj={{ data: loggedInUser.stories, id: loggedInUser.localId }}
+                        {showModal && loggedInUser.localId === showModal && <StoryViewerHandler navigation={props.navigation} showModal={!!showModal} closeModal={() => setShowModal()} storyObj={{ data: loggedInUser.stories, id: loggedInUser.localId }}
                             profileImage={loggedInUser.profileImage} username={loggedInUser.username} indexStory={indexStory} />}
                     </View>
                 </TouchableWithoutFeedback>

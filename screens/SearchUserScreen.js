@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { TextInput } from 'react-native-paper';
+//import { TextInput } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchFilteredData } from '../store/actions/user';
 
 const SearchUserScreen = props => {
-    const textRef = useRef();
     const [text, setText] = useState('');
     const userData = useSelector(state => state.user.searchedUsers);
     const dispatch = useDispatch();
@@ -15,7 +14,7 @@ const SearchUserScreen = props => {
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            if (textRef.current.state.value === text && text !== '') {
+            if (text !== '') {
                 dispatch(fetchFilteredData(text));
             }
         }, 500);
@@ -43,7 +42,7 @@ const SearchUserScreen = props => {
                 <TouchableOpacity style={styles.icon} onPress={() => props.navigation.goBack()}>
                     <Ionicons name="md-arrow-back" size={26} />
                 </TouchableOpacity>
-                <TextInput ref={textRef} style={styles.search} placeholder="Search" onChangeText={searchUserHandler} />
+                <TextInput style={styles.search} placeholder="Search" onChangeText={searchUserHandler} />
             </View>
             {!userData ? <View style={styles.centered}>
                 <Text>Type to continue search</Text>
@@ -75,7 +74,7 @@ const styles = StyleSheet.create({
     search: {
         width: '90%',
         height: 40,
-        backgroundColor: 'transparent'
+        backgroundColor: 'transparent',
     },
     icon: {
         justifyContent: 'center',

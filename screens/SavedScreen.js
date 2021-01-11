@@ -25,12 +25,12 @@ const SavedScreen = props => {
             <View style={styles.each}>
                 <View style={styles.block}>
                     <View style={styles.imageContainer}>
-                        <Image style={styles.image} source={{ uri: savedData[0] ? savedData[0].imageUrl[0] : '' }} />
-                        <Image style={styles.image} source={{ uri: savedData[1] ? savedData[1].imageUrl[0] : '' }} />
+                        <Image style={styles.image} source={{ uri: savedData[0] ? savedData[0].imageUrl[0].uri : '' }} />
+                        <Image style={styles.image} source={{ uri: savedData[1] ? savedData[1].imageUrl[0].uri : '' }} />
                     </View>
                     <View style={styles.imageContainer}>
-                        <Image style={styles.image} source={{ uri: savedData[2] ? savedData[2].imageUrl[0] : '' }} />
-                        <Image style={styles.image} source={{ uri: savedData[3] ? savedData[3].imageUrl[0] : '' }} />
+                        <Image style={styles.image} source={{ uri: savedData[2] ? savedData[2].imageUrl[0].uri : '' }} />
+                        <Image style={styles.image} source={{ uri: savedData[3] ? savedData[3].imageUrl[0].uri : '' }} />
                     </View>
                 </View>
                 <View style={styles.textContainer}>

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, Modal, StyleSheet, Image, ImageBackground, ActivityIndicator, Dimensions, TouchableWithoutFeedback, Animated, TouchableNativeFeedback } from 'react-native';
+import { View, Text, Modal, StyleSheet, PanResponder, Image, ImageBackground, ActivityIndicator, Dimensions, TouchableWithoutFeedback, TouchableNativeFeedback, ScrollView } from 'react-native';
 import { ProgressBar, TextInput } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateStoriesViewd } from '../store/actions/images';
@@ -16,11 +16,29 @@ const StoryViewerHandler = props => {
     const [disappearHeader, setDisappearHeader] = useState(false);
     const [message, setMessage] = useState('');
     const [refresh, setRefresh] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [openViews, setOpenViews] = useState(false);
     const loggedInUser = useSelector(state => state.user.loggedInUserdata);
     const enitreUserDatabase = useSelector(state => state.user.enitreUserDatabase);
     const dispatch = useDispatch();
     let timer;
+
+    const shouldMove = gestureState => {
+        if (gestureState.dy < -30 && loggedInUser.localId === userid) {
+            return true;
+        } else {
+            false;
+        }
+    }
+
+    const [panResponder, setPanResponder] = useState(PanResponder.create({
+        onMoveShouldSetPanResponder: (event, gestureState) => shouldMove(gestureState),
+        onPanResponderMove: (event, gestureState) => {
+            if (shouldMove(gestureState) === true) {
+                openViewsHandler();
+            }
+        }
+    }));
 
     const changeImageHandler = event => {
         const screenWidth = Dimensions.get('window').width;
@@ -64,7 +82,16 @@ const StoryViewerHandler = props => {
                         changeStoryHandler();
                         return 0;
                     } else {
-                        return +prevState + 1
+                        let flag = false;
+                        setLoading(prevLoad => {
+                            flag = prevLoad;
+                            return prevLoad;
+                        });
+                        if(flag === true) {
+                            return 0;                           
+                        }else {
+                            return +prevState + 1;
+                        }
                     }
                 });
             }
@@ -72,16 +99,20 @@ const StoryViewerHandler = props => {
         })
     }, []);
 
-    const modalCloseHandler = async () => {
+    const modalCloseHandler = () => {
         if (openViews === true) {
             setOpenViews(false);
             setHold(false);
         } else {
-            if (timer) {
-                await clearInterval(timer);
-            }
-            props.closeModal();
+            closeModalForce();
         }
+    }
+
+    const closeModalForce = async () => {
+        if (timer) {
+            await clearInterval(timer);
+        }
+        props.closeModal();
     }
 
     const sendCommentsHandler = async () => {
@@ -107,62 +138,91 @@ const StoryViewerHandler = props => {
         setRefresh(false);
     }
 
+    const openViewsHandler = () => {
+        setOpenViews(true);
+        setHold(true);
+    }
+
+    const jumpToIndexHandler = index => {
+        setProgress(0);
+        setIndex(index);
+        dispatch(updateStoriesViewd(userid, imageUrls[index].id));
+    }
+
     //uncomment to make the timer work again.
     useEffect(() => {
         timer = setInterval(updateProgressHandler, 500);
     }, []);
 
-    return <Modal visible={props.showModal} onRequestClose={modalCloseHandler}>
-        {openViews === true ? <View>
-            <View style={styles.storyPhotos}>
-                {imageUrls.map((url, indexStory) => {
-                    return <Image style={indexStory === index? styles.enhancedStory:styles.storyImage} source={{ uri: url.imageUrl }} />
-                })}
-            </View>
-            <View style={styles.viewedStory}>
-                <View style={styles.viewCount}>
-                    <Ionicons name="md-eye" size={26} style={{ paddingLeft: '5%', paddingRight: 10 }} />
-                    <Text>{imageUrls[index].viewedStory ? imageUrls[index].viewedStory.length : 0}</Text>
-                </View>
-                {imageUrls[index].viewedStory ? imageUrls[index].viewedStory.map(story => {
-                    const user = enitreUserDatabase.find(user => user.id === story);
-                    return <View key={user.id} style={styles.userDetail}>
-                        <Image style={styles.image} source={{ uri: user.profileImage }} />
-                        <Text style={styles.username}>{user.fullName}</Text>
+    /* useEffect(() => {
+        setProgress(0);
+    }, [loading]); */
+
+    return <View style={{ flex: 1 }} {...panResponder.panHandlers}>
+        <Modal visible={props.showModal} onRequestClose={modalCloseHandler}>
+            {openViews === true ? <View>
+                <ScrollView showsHorizontalScrollIndicator={false} horizontal={true} contentContainerStyle={styles.storyPhotos}>
+                    {imageUrls.map((url, indexStory) => {
+                        return <TouchableNativeFeedback onPress={jumpToIndexHandler.bind(this, indexStory)}>
+                            <Image style={indexStory === index ? styles.enhancedStory : styles.storyImage} source={{ uri: url.imageUrl }} />
+                        </TouchableNativeFeedback>
+                    })}
+                </ScrollView>
+                <View style={styles.viewedStory}>
+                    <View style={styles.viewCount}>
+                        <Ionicons name="md-eye" size={26} style={{ paddingLeft: '5%', paddingRight: 10 }} />
+                        <Text>{imageUrls[index].viewedStory ? imageUrls[index].viewedStory.length : 0}</Text>
                     </View>
-                }) : null}
-            </View>
-        </View> :
-            imageUrls.length === 0 ? <View style={styles.centered}>
-                <ActivityIndicator size="small" />
-            </View> : <TouchableWithoutFeedback onPress={changeImageHandler} onLongPress={() => { setDisappearHeader(true); setHold(true) }}
-                onPressOut={() => { setDisappearHeader(false); setHold(false) }}>
-                    <ImageBackground progressiveRenderingEnabled={true} style={styles.imageBackgroud} source={{ uri: imageUrls[index].imageUrl }}>
-                        {disappearHeader === false ? <React.Fragment>
-                            <View style={{ flexDirection: 'row' }}>
-                                {imageUrls.map((url, i) => {
-                                    return <ProgressBar color="white" progress={(+index === +i) ? +progress / 20 : 0} key={i} style={{ ...styles.bar, width: (Dimensions.get('window').width / imageUrls.length) }} />
-                                })}
-                            </View>
-                            <View style={styles.userDetail}>
-                                <Image style={styles.image} source={{ uri: props.profileImage }} />
-                                <Text style={styles.username}>{props.username}</Text>
-                            </View>
-                            {loggedInUser.localId !== userid ? <View style={styles.textBar}>
-                                <TextInput selectionColor={'white'} style={styles.input} value={message} multiline
-                                    onChangeText={(text) => setMessage(text)} onFocus={() => setHold(true)} onBlur={() => setHold(false)} />
-                                {refresh === true ? <ActivityIndicator size="small" color="white" /> :
-                                    <Text style={{ width: '10%', height: 60, marginTop: 35, color: "white" }} onPress={sendCommentsHandler}>Send</Text>}
-                            </View> : <TouchableNativeFeedback onPress={() => {setOpenViews(true); setHold(true)}}>
-                                    <View style={styles.viewedBy}>
-                                        <Ionicons size={26} name="md-eye" color="white" />
-                                        <Text style={{ color: 'white' }}>Viewed by {imageUrls[index].viewedStory ? imageUrls[index].viewedStory.length : 0}</Text>
-                                    </View>
-                                </TouchableNativeFeedback>}
-                        </React.Fragment> : null}
-                    </ImageBackground>
-                </TouchableWithoutFeedback>}
-    </Modal>
+                    {imageUrls[index].viewedStory ? imageUrls[index].viewedStory.map(story => {
+                        if (story) {
+                            const user = enitreUserDatabase.find(user => user.id === story);
+                            return <TouchableNativeFeedback key={user.id} onPress={() => {
+                                closeModalForce();
+                                props.navigation.navigate('UserProfile', {
+                                username: user.username,
+                                id: user.id
+                            })}}>
+                                <View style={styles.userDetail} >
+                                    <Image style={styles.image} source={{ uri: user.profileImage }} />
+                                    <Text style={styles.username}>{user.fullName}</Text>
+                                </View>
+                            </TouchableNativeFeedback>
+                        }
+                    }) : null}
+                </View>
+            </View> :
+                imageUrls.length === 0 ? <View style={styles.centered}>
+                    <ActivityIndicator size="small" />
+                </View> : <TouchableWithoutFeedback onPress={changeImageHandler} onLongPress={() => { setDisappearHeader(true); setHold(true) }}
+                    onPressOut={() => { setDisappearHeader(false); setHold(false) }}>
+                        <ImageBackground progressiveRenderingEnabled={true} onLoadStart={() => setLoading(true)} onLoadEnd={() => setLoading(false)} 
+                        style={styles.imageBackgroud} source={{ uri: imageUrls[index].imageUrl }}>
+                            {disappearHeader === false ? <React.Fragment>
+                                <View style={{ flexDirection: 'row' }}>
+                                    {imageUrls.map((url, i) => {
+                                        return <ProgressBar color="white" progress={(+index === +i) ? +progress / 20 : 0} key={i} style={{ ...styles.bar, width: (Dimensions.get('window').width / imageUrls.length) }} />
+                                    })}
+                                </View>
+                                <View style={styles.userDetail}>
+                                    <Image style={styles.image} source={{ uri: props.profileImage }} />
+                                    <Text style={styles.username}>{props.username}</Text>
+                                </View>
+                                {loggedInUser.localId !== userid ? <View style={styles.textBar}>
+                                    <TextInput selectionColor={'white'} style={styles.input} value={message} multiline
+                                        onChangeText={(text) => setMessage(text)} onFocus={() => setHold(true)} onBlur={() => setHold(false)} />
+                                    {refresh === true ? <ActivityIndicator size="small" color="white" /> :
+                                        <Text style={{ width: '10%', height: 60, marginTop: 35, color: "white" }} onPress={sendCommentsHandler}>Send</Text>}
+                                </View> : <TouchableNativeFeedback onPress={openViewsHandler}>
+                                        <View style={styles.viewedBy}>
+                                            <Ionicons size={26} name="md-eye" color="white" />
+                                            <Text style={{ color: 'white' }}>Viewed by {imageUrls[index].viewedStory ? imageUrls[index].viewedStory.length : 0}</Text>
+                                        </View>
+                                    </TouchableNativeFeedback>}
+                            </React.Fragment> : null}
+                        </ImageBackground>
+                    </TouchableWithoutFeedback>}
+        </Modal>
+    </View>
 }
 
 const styles = StyleSheet.create({
@@ -179,10 +239,10 @@ const styles = StyleSheet.create({
     },
     userDetail: {
         width: '100%',
-        height: 40,
+        height: 60,
         flexDirection: 'row',
         alignItems: 'center',
-        marginVertical: 10
+        //marginVertical: 10
     },
     username: {
         fontWeight: 'bold'
@@ -243,11 +303,11 @@ const styles = StyleSheet.create({
         borderRadius: 10
     },
     storyPhotos: {
-        width: '100%',
+        //width: '100%',
         height: Dimensions.get('window').height / 3,
-        flexDirection: 'row',
+        //flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
     },
     storyImage: {
         width: 100,

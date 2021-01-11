@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TextInput, TouchableHighlight, ActivityIndicato
 //import { FlatList, ScrollView } from 'react-native-gesture-handler';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMessagesIdSpecific, setMessages } from '../store/actions/messages';
-import { pushMessagesidsToLoggedInUser, removeNewMessagesToUser } from '../store/actions/user';
+import { fetchEntireUserDatabase, fetchUserData, pushMessagesidsToLoggedInUser, removeNewMessagesToUser } from '../store/actions/user';
 import firebase from "firebase";
 import * as ImagePicker from 'expo-image-picker';
 import StoryViewerHandler from './StoryViewerHandler';
@@ -54,8 +54,10 @@ const ConversationScreen = props => {
         setMessageSentLoader(true);
         await dispatch(setMessages(pushToken, conversationId, userId, message));
         setMessageSentLoader(false);
-        if (!conversationId) {
-            dispatch(pushMessagesidsToLoggedInUser(userId + loggedInUser.localId));
+        console.log(props.navigation.getParam('conversationId'));
+        if (!props.navigation.getParam('conversationId')) {
+            dispatch(fetchUserData(loggedInUser.localId, true));
+            dispatch(fetchEntireUserDatabase());
         }
     }
 

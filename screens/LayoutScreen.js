@@ -26,7 +26,7 @@ const LayoutScreen = props => {
                 dispatch(setNoNewNotification());
             }
 
-            props.navigation.navigate(screenName);
+            props.navigation.navigate(screenName,{ pressed: true });
         }
     }
 
@@ -40,9 +40,7 @@ const LayoutScreen = props => {
 
         if (!result.cancelled) {
             console.log(result);
-           props.navigation.navigate(screenName, {
-               imageObj: result
-           });
+           props.navigation.navigate(screenName);
         }
     }
 
@@ -108,7 +106,6 @@ const styles = StyleSheet.create({
         height: 6,
         borderRadius: 3,
         backgroundColor: 'red',
-        marginLeft: 8
     },
     eachBar: {
         width: '25%',

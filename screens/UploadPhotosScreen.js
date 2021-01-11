@@ -1,19 +1,26 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
     StyleSheet, View, Text, Platform, Alert, Image, ScrollView, KeyboardAvoidingView, TextInput, ActivityIndicator,
-    TouchableWithoutFeedback
+    TouchableWithoutFeedback,
+    Modal,
+    FlatList,
+    Dimensions
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useDispatch, useSelector } from 'react-redux';
 import { submitImages } from '../store/actions/images';
 import firebase from "firebase";
 import { notificationCreator } from '../store/actions/notification';
+import { Ionicons } from '@expo/vector-icons';
+
+var IMAGE_COUNT = 5;
 
 const UploadPhotosScreen = props => {
     const [imageUrl, setImageUrl] = useState([props.navigation.getParam('imageObj')]);
     const [description, setDescription] = useState('');
     const [loader, setLoader] = useState(false);
     const user = useSelector(state => state.user.loggedInUserdata);
+    const [showModal, setShowModal] = useState(false);
     const dispatch = useDispatch();
     const tagged = props.navigation.getParam('taggedPeople');
     const [err, setErr] = useState();
@@ -64,15 +71,15 @@ const UploadPhotosScreen = props => {
                 const ref = firebase.storage().ref().child('social/' + imageUrl[key].uri.split('/').pop());
                 await ref.put(blob);
                 const url = await ref.getDownloadURL();
-                uploadedImageUrls.push({
+                const obj = {
                     uri: url,
                     width: imageUrl[key].width,
                     height: imageUrl[key].height,
-                    taggedPeople: imageUrl[key].tagged? imageUrl[key].tagged: [] 
-                });
+                    taggedPeople: imageUrl[key].tagged ? imageUrl[key].tagged : []
+                }
+                uploadedImageUrls.push(obj);
             } catch (err) {
-                console.log(err);
-                return;
+                console.log('Error is: ', err);
             }
         }
         return uploadedImageUrls;
@@ -86,11 +93,13 @@ const UploadPhotosScreen = props => {
             setLoader(false);
             uploadedImageUrls.map(image => {
                 const taggedPeople = image.taggedPeople;
-                taggedPeople.map(tagg => {
-                    dispatch(notificationCreator(tagg.id, 'Tagged', user.username + ' tagged you in a photo.', 'Tagged photo', imageId, user.localId));
-                })
+                if (taggedPeople && taggedPeople.length > 0) {
+                    taggedPeople.map(tagg => {
+                        dispatch(notificationCreator(tagg.id, 'Tagged', user.username + ' tagged you in a photo.', 'Tagged photo', imageId, user.localId));
+                    })
+                }
             })
-            
+
             props.navigation.goBack();
         } else {
             setErr('Please enter a description to add photos.');
@@ -102,6 +111,10 @@ const UploadPhotosScreen = props => {
         setDescription(text);
     }
 
+    const renderImageHandler = itemData => {
+        return <View style={styles.uploadImageContainer}><Image style={styles.uploadImage} source={{ uri: itemData.item.uri }} resizeMode="stretch" /></View>
+    }
+
     useEffect(() => {
         props.navigation.setParams({
             addPost: addPostHandler,
@@ -109,37 +122,41 @@ const UploadPhotosScreen = props => {
         });
     }, [description, imageUrl, loader]);
 
+    if (showModal === true) {
+        return <Modal visible={showModal} onRequestClose={() => setShowModal(false)}>
+            <FlatList data={imageUrl} horizontal={true} keyExtractor={item => item.uri} renderItem={renderImageHandler} 
+            showsHorizontalScrollIndicator={false} />
+        </Modal>
+    }
+
     return <KeyboardAvoidingView behavior="height" keyboardVerticalOffset={10} style={{ flex: 1 }}>
         <ScrollView style={{ flex: 1 }}>
             <View style={styles.screen}>
-                {/* {imageUrl.length === 0 ? <View style={styles.buttonContainer}>
-                    <Button title="Add an Image" onPress={pickImage} />
-                </View> : <View style={styles.imageContainer}>
-                        <Image source={{ uri: imageUrl[0] }} style={styles.image} />
-                    </View>}
-                <View style={styles.postDetailsContainer}>
-                    <Text style={styles.text}>Post Details</Text>
-                    <TextInput style={styles.input} placeholder="Enter description" multiline value={description} onChangeText={text => setDescription(text)} />
-                    {loader? <ActivityIndicator size="small" color="green" />:<Button title="Add Post" color="green" onPress={addPostHandler} disabled={imageUrl.length === 0} />}
-                </View> */}
                 <View style={{ width: '80%' }}>
                     <TextInput style={styles.input} placeholder="Enter description" multiline value={description} onChangeText={descriptionHandler} />
-                    {err? <Text style={{color: 'red'}}>{err}</Text>: null}
-                    <TouchableWithoutFeedback>
+                    {err ? <Text style={{ color: 'red' }}>{err}</Text> : null}
+                    <TouchableWithoutFeedback onPress={pickImage} disabled={imageUrl.length === IMAGE_COUNT}>
                         <View style={{ ...styles.addMore, marginTop: 40 }}>
                             <View style={styles.hr}></View>
-                            <Text>Add More Photos</Text>
+                            <Text style={imageUrl.length === IMAGE_COUNT ? { color: '#ccc' } : null}>Add More Photos</Text>
                             <View style={styles.hr}></View>
                         </View>
                     </TouchableWithoutFeedback>
-                    <TouchableWithoutFeedback onPress={() => props.navigation.navigate('TagPhoto', { uri: imageUrl[0], tagged: imageUrl[0].tagged?imageUrl[0].tagged: [], index: 0 })}>
+                    <TouchableWithoutFeedback onPress={() => props.navigation.navigate('TagPhoto', { uri: imageUrl[0], tagged: imageUrl[0].tagged ? imageUrl[0].tagged : [], index: 0 })}>
                         <View style={{ ...styles.addMore }}>
                             <Text style={{ marginTop: 10 }}>{imageUrl[0].tagged && imageUrl[0].tagged.length > 0 ? 'Tagged ' + imageUrl[0].tagged.length + ' people' : 'Tag Photos'}</Text>
                             <View style={styles.hr}></View>
                         </View>
                     </TouchableWithoutFeedback>
                 </View>
-                <Image source={{ uri: imageUrl[0].uri }} style={styles.image} />
+                <TouchableWithoutFeedback onPress={() => setShowModal(true)}>
+                    <View style={styles.imageContainer}>
+                        {imageUrl && imageUrl.length > 1 ? <View style={styles.album}>
+                            <Ionicons name="md-albums" size={15} color="white" />
+                        </View> : null}
+                        <Image source={{ uri: imageUrl[0].uri }} style={styles.image} />
+                    </View>
+                </TouchableWithoutFeedback>
             </View>
         </ScrollView>
     </KeyboardAvoidingView>
@@ -186,6 +203,10 @@ const styles = StyleSheet.create({
         alignItems: 'flex-end'
     },
     image: {
+        width: '100%',
+        height: '100%',
+    },
+    imageContainer: {
         width: '20%',
         height: 80,
         borderRadius: 10
@@ -199,6 +220,21 @@ const styles = StyleSheet.create({
         width: '90%',
         height: 1,
         backgroundColor: '#ccc'
+    },
+    album: {
+        position: 'absolute',
+        right: 5,
+        top: 5,
+        zIndex: 10
+    },
+    uploadImage: {
+        width: '100%',
+        height: Dimensions.get('window').width
+    },
+    uploadImageContainer: {
+        width: Dimensions.get('window').width,
+        height: '100%',
+        justifyContent: 'center'
     }
 })
 

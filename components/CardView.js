@@ -99,7 +99,7 @@ const CardView = props => {
                                 }) : null}
                             {props.image.length > 1 &&
                                 <View style={styles.countContainer}>
-                                    {props.image.map((data, index) => <View key={data} style={itemData.index === index ? styles.darkDot : styles.dotStyle}></View>)}
+                                    {props.image.map((data, index) => <View key={index} style={itemData.index === index ? styles.darkDot : styles.dotStyle}></View>)}
                                 </View>}
                         </View>
                     </TouchableHighlight>
