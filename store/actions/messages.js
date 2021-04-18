@@ -6,7 +6,7 @@ export const FETCH_NOTIFICATIONS = 'FETCH_NOTIFICATIONS';
 //conversationId if exist 
 //userId of the user we sending to
 //message content 
-export const setMessages = (pushToken, conversationId, userId, message, isShare, isUpload, repliedStoryId) => {
+export const setMessages = (pushToken, conversationId, userId, message, isShare, isUpload, repliedStoryId, repliedText) => {
     return async (dispatch, getState) => {
         const loggedInUser = getState().user.loggedInUserdata;
         const timestamp = new Date().toISOString();
@@ -23,7 +23,8 @@ export const setMessages = (pushToken, conversationId, userId, message, isShare,
                 time: timestamp,
                 isShare: isImageShare,
                 isUpload: isImageUpload,
-                repliedId: repliedId
+                repliedId: repliedId,
+                repliedText: repliedText
             })
             const response = await fetch(`https://rn-social-networking.firebaseio.com/messages/${conversationId}.json`, {
                 method: 'POST',
@@ -36,7 +37,8 @@ export const setMessages = (pushToken, conversationId, userId, message, isShare,
                     time: timestamp,
                     isShare: isImageShare,
                     isUpload: isImageUpload,
-                    repliedId: repliedId
+                    repliedId: repliedId,
+                    repliedText: repliedText
                 })
             })
             if (response.ok) {
@@ -83,7 +85,7 @@ export const setMessages = (pushToken, conversationId, userId, message, isShare,
 
 export const fetchMessagesIdSpecific = (messageId, isNew) => {
     return async (dispatch, getState) => {
-        const loggedInUser = getState().user.loggedInUserdata; 
+        const loggedInUser = getState().user.loggedInUserdata;
         const response = await fetch(`https://rn-social-networking.firebaseio.com/messages/${messageId}.json`, {
             method: 'GET'
         });
@@ -110,12 +112,12 @@ export const fetchMessagesIdSpecific = (messageId, isNew) => {
                                 time: resData[key].time
                             })
                         }
-                    }else if(resData[key].repliedId) {
+                    } else if (resData[key].repliedId) {
                         const storyData = await fetch(`https://rn-social-networking.firebaseio.com/stories/${loggedInUser.localId}/${resData[key].repliedId}.json`, {
                             method: 'GET'
                         });
 
-                        if(storyData.ok) {
+                        if (storyData.ok) {
                             messageData.push({
                                 storyUrl: storyData.imageUrl,
                                 isNew: true,
@@ -144,18 +146,20 @@ export const fetchMessagesIdSpecific = (messageId, isNew) => {
                                 time: resData[key].time
                             })
                         }
-                    }else if(resData[key].repliedId) {
+                    } else if (resData[key].repliedId) {
                         const storyData = await fetch(`https://rn-social-networking.firebaseio.com/stories/${resData[key].repliedId}.json`, {
                             method: 'GET'
                         });
 
-                        if(storyData.ok) {
+                        if (storyData.ok) {
                             const storyRes = await storyData.json();
-                            messageData.push({
-                                storyUrl: storyRes.imageUrl,
-                                isNew: true,
-                                ...resData[key],
-                            });
+                            if (storyRes && storyRes.imageUrl) {
+                                messageData.push({
+                                    storyUrl: storyRes.imageUrl,
+                                    isNew: true,
+                                    ...resData[key],
+                                });
+                            }
                         }
                     } else {
                         messageData.push(resData[key]);

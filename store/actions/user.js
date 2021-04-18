@@ -408,6 +408,8 @@ export const removeNewMessagesToUser = (messageId) => {
         });
         const resData = await response.json();
         const newMessageIds = resData.newMessageIds ? resData.newMessageIds : [];
+        console.log('Msg Id to remove: ', messageId);
+        console.log('Total ids mapped: ',newMessageIds);
         if (newMessageIds.includes(messageId)) {
             const index = newMessageIds.findIndex(each => each === messageId);
             newMessageIds.splice(index, 1);

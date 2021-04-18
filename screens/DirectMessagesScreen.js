@@ -156,9 +156,9 @@ const DirectMessagesScreen = props => {
                 <View style={styles.profileData}>
                     <Text style={styles.user}>{userData.fullName}</Text>
                     <View style={{ flexDirection: 'row' }}>
-                        <Text style={styles.message}>{message}</Text>
+                        <Text style={styles.message}>{message.length>28? message.substring(0,28)+'...': message}</Text>
                         <Text style={{ ...styles.message, marginLeft: 20 }}>{timeDifference === 0 ? 'Now' : timeDifference.toString() + 'h'}</Text>
-                        {isNew && <View style={styles.dot}></View>}
+                        {isNew === true && <View style={styles.dot}></View>}
                     </View>
                 </View>
             </View>

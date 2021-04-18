@@ -1,6 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Entypo, Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableHighlight, ActivityIndicator, Image, KeyboardAvoidingView, FlatList, Keyboard, Dimensions, TouchableWithoutFeedback, Modal } from 'react-native';
+import {
+    View, Text, StyleSheet, TextInput, TouchableHighlight, ActivityIndicator, Image, KeyboardAvoidingView, FlatList, Keyboard,
+    Dimensions, TouchableWithoutFeedback, Modal, TouchableNativeFeedback
+} from 'react-native';
 //import { FlatList, ScrollView } from 'react-native-gesture-handler';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMessagesIdSpecific, setMessages } from '../store/actions/messages';
@@ -29,6 +32,10 @@ const ConversationScreen = props => {
     const entireUserDatabase = useSelector(state => state.user.enitreUserDatabase);
     const [modalImage, setModalImage] = useState();
     const [showModal, setShowModal] = useState();
+    const [showReplyBar, setReplyBar] = useState(false);
+    const [showReplyContainer, setShowReplyContainer] = useState(false);
+    const [repliedText, setRepliedText] = useState();
+    let textInputRef;
 
     useEffect(() => {
         const listener1 = Keyboard.addListener('keyboardDidShow', () => setKeyboardActive(true));
@@ -47,12 +54,21 @@ const ConversationScreen = props => {
             listener1.remove();
             listener2.remove();
         }
-    }, []);
+    }, [conversationId]);
 
     const sendMessageHandler = async () => {
         setMessage('');
         setMessageSentLoader(true);
-        await dispatch(setMessages(pushToken, conversationId, userId, message));
+        let repliedObj;
+        if (repliedText) {
+            repliedObj = {
+                userId: repliedText.userId,
+                message: repliedText.message
+            }
+        }
+        setRepliedText();
+        setShowReplyContainer(false);
+        await dispatch(setMessages(pushToken, conversationId, userId, message, false, false, null, repliedObj));
         setMessageSentLoader(false);
         console.log(props.navigation.getParam('conversationId'));
         if (!props.navigation.getParam('conversationId')) {
@@ -167,6 +183,25 @@ const ConversationScreen = props => {
         });
     }
 
+    const toggleReplyBar = itemData => {
+        setReplyBar(!showReplyBar);
+        setRepliedText(itemData && itemData.item && itemData.item.message ? itemData.item : null);
+    }
+
+    const rightLeftTextBox = itemData => {
+        return <View style={{ width: '100%', height: '100%', flexDirection: 'row', justifyContent: 'flex-end' }}>
+            {itemData.item.repliedText && <View style={{ width: '100%', height: '100%', alignItems: 'flex-end' }}>
+                <Text>{itemData.item.repliedText.userId === loggedInUser.localId ? 'Replied to yourself' : 'You replied'}</Text>
+                <View style={styles.repliedRight}>
+                    <Text style={styles.text}>{itemData.item.repliedText.message}</Text>
+                </View>
+            </View>}
+            <View style={styles.right}>
+                {componentToRender(itemData.item)}
+            </View>
+        </View>
+    }
+
     const renderDataHandler = itemData => {
         const time = new Date(itemData.item.time);
         const hours = time.getHours();
@@ -174,9 +209,19 @@ const ConversationScreen = props => {
         const displayTime = hours.toString() + ':' + min.toString();
         if (itemData.item.userId === loggedInUser.localId) {
             return <TouchableWithoutFeedback onPress={itemData.item.isShare ? showImageHandler.bind(this, itemData) :
-                itemData.item.isUpload ? showUploadedImage.bind(this, itemData) : 
-                itemData.item.storyUrl? showStoryHandler.bind(this, itemData.item):showTimeHandler.bind(this, itemData.index)}>
+                itemData.item.isUpload ? showUploadedImage.bind(this, itemData) :
+                    itemData.item.storyUrl ? showStoryHandler.bind(this, itemData.item) : showTimeHandler.bind(this, itemData.index)}
+                onLongPress={toggleReplyBar.bind(this, itemData)} delayLongPress={50}>
                 <View style={{ flexGrow: 1 }}>
+                    {itemData.item.repliedText && <View style={{ width: '100%', alignItems: 'flex-end', paddingHorizontal: 5 }}>
+                        <Text style={{ color: 'darkgray' }}>{itemData.item.repliedText.userId === loggedInUser.localId ? 'Replied to yourself' : 'You replied'}</Text>
+                        <View style={{ flexDirection: 'row' }}>
+                            <View style={styles.repliedRight}>
+                                <Text style={styles.text}>{itemData.item.repliedText.message}</Text>
+                            </View>
+                            <View style={styles.verticalLine}></View>
+                        </View>
+                    </View>}
                     <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'flex-end' }}>
                         <View style={styles.right}>
                             {componentToRender(itemData.item)}
@@ -191,8 +236,18 @@ const ConversationScreen = props => {
         } else {
             return <TouchableWithoutFeedback onPress={itemData.item.isShare ? showImageHandler.bind(this, itemData) :
                 itemData.item.isUpload ? showUploadedImage.bind(this, itemData) :
-                itemData.item.storyUrl? showStoryHandler.bind(this, itemData.item): showTimeHandler.bind(this, itemData.index)}>
+                    itemData.item.storyUrl ? showStoryHandler.bind(this, itemData.item) : showTimeHandler.bind(this, itemData.index)}
+                onLongPress={toggleReplyBar.bind(this, itemData)} delayLongPress={50}>
                 <View style={{ flexGrow: 1 }}>
+                    {itemData.item.repliedText && <View style={{ width: '100%', flexDirection: 'column', justifyContent: 'center', marginLeft: '10%' }}>
+                        <Text style={{ color: 'darkgray' }}>{itemData.item.repliedText.userId === itemData.item.userId ? 'Replied to themself' : 'Replied to you'}</Text>
+                        <View style={{ flexDirection: 'row' }}>
+                            <View style={styles.verticalLine}></View>
+                            <View style={styles.repliedLeft}>
+                                <Text style={styles.text}>{itemData.item.repliedText.message}</Text>
+                            </View>
+                        </View>
+                    </View>}
                     <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center' }}>
                         <Image source={{ uri: profileImage }} style={styles.image} />
                         <View style={styles.left}>
@@ -205,6 +260,22 @@ const ConversationScreen = props => {
                 </View>
             </TouchableWithoutFeedback>
         }
+    }
+
+    const bottomActionHandler = text => {
+        if (text === 'Reply') {
+            setReplyBar(!showReplyBar);
+            textInputRef.focus();
+            setShowReplyContainer(!showReplyContainer);
+        }
+    }
+
+    const fetchBottomComponents = text => {
+        return <View style={styles.bottomButtons}>
+            <TouchableNativeFeedback onPress={bottomActionHandler.bind(this, text)} style={{ width: '100%', height: '100%' }}>
+                <Text>{text}</Text>
+            </TouchableNativeFeedback>
+        </View>
     }
 
     if (reload) {
@@ -224,7 +295,7 @@ const ConversationScreen = props => {
                 }} /> : null}
         <View style={styles.conversationBox}>
             <Ionicons size={23} color="black" onPress={uploadImageHandler.bind(this, true)} name="md-camera" />
-            <TextInput style={styles.input} multiline onChangeText={text => setMessage(text)} value={message} />
+            <TextInput style={styles.input} multiline onChangeText={text => setMessage(text)} value={message} ref={input => { textInputRef = input }} />
             <TouchableHighlight activeOpacity={0.2} onPress={message.length === 0 ? uploadImageHandler.bind(this, false) : sendMessageHandler}>
                 <View style={{ height: '100%', justifyContent: 'center' }}>
                     {message.length === 0 ? <Ionicons name="md-albums" size={26} /> :
@@ -235,8 +306,25 @@ const ConversationScreen = props => {
         <Modal transparent={true} visible={!!modalImage} onRequestClose={() => setModalImage()}>
             <Image style={styles.modalImage} source={{ uri: modalImage }} />
         </Modal>
-        {showModal? <StoryViewerHandler showModal={!!showModal} closeModal={() => setShowModal()} storyObj={showModal.storyObj}
-                    profileImage={showModal.user.profileImage} username={showModal.user.username} indexStory={showModal.indexStory} />: null}
+        {showModal ? <StoryViewerHandler showModal={!!showModal} closeModal={() => setShowModal()} storyObj={showModal.storyObj}
+            profileImage={showModal.user.profileImage} username={showModal.user.username} indexStory={showModal.indexStory} /> : null}
+        <Modal animationType="slide" transparent={true} visible={showReplyBar} onRequestClose={toggleReplyBar}>
+            <View style={{ flex: 1 }}>
+                <TouchableWithoutFeedback onPress={toggleReplyBar}>
+                    <View style={styles.modal}></View>
+                </TouchableWithoutFeedback>
+                <View style={styles.screen}>
+                    {fetchBottomComponents('Reply')}
+                    {fetchBottomComponents('Unsend')}
+                    {fetchBottomComponents('More')}
+                </View>
+            </View>
+        </Modal>
+        {repliedText && showReplyContainer && <View style={styles.bottomTextContainer}>
+            <Text style={styles.replyingContainer}>Replying to {repliedText.userId === loggedInUser.localId ? 'yourself' : entireUserDatabase.find(user => user.id === repliedText.userId).fullName}</Text>
+            <Text>{repliedText.message}</Text>
+            <Entypo name='cross' style={styles.crossStyle} size={24} onPress={() => { setRepliedText(); setShowReplyContainer(false); }} />
+        </View>}
     </KeyboardAvoidingView>
 }
 
@@ -341,6 +429,72 @@ const styles = StyleSheet.create({
     },
     repliedMessage: {
         margin: 10
+    },
+    modal: {
+        width: '100%',
+        height: '90%',
+        backgroundColor: 'rgba(240, 240, 240, 0.3)',
+    },
+    screen: {
+        width: '100%',
+        height: '10%',
+        backgroundColor: 'white',
+        borderRadius: 15,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 10
+    },
+    bottomButtons: {
+        width: '30%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row'
+    },
+    bottomTextContainer: {
+        width: '100%',
+        backgroundColor: 'white',
+        position: 'absolute',
+        left: 0,
+        bottom: 62,
+        justifyContent: 'center',
+        padding: 10
+    },
+    replyingContainer: {
+        fontFamily: 'open-sans',
+        color: '#585858'
+    },
+    crossStyle: {
+        position: 'absolute',
+        right: 5,
+        top: 5
+    },
+    repliedRight: {
+        maxWidth: '50%',
+        marginHorizontal: 5,
+        marginVertical: 1,
+        justifyContent: 'flex-end',
+        flexDirection: 'row',
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        backgroundColor: 'darkgray'
+    },
+    repliedLeft: {
+        maxWidth: '50%',
+        marginHorizontal: 5,
+        marginVertical: 1,
+        alignItems: 'flex-start',
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        backgroundColor: 'darkgray'
+    },
+    verticalLine: {
+        width: 1,
+        height: '100%',
+        backgroundColor: 'black'
     }
 })
 

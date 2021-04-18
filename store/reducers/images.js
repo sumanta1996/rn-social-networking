@@ -1,5 +1,5 @@
 //import { feedData } from "../../data/dummy-data";
-import { COMMENT_HANDLER, FETCH_COMMENTS, FETCH_DATA, FETCH_STORIES, LIKED_HANDLER, SAVED_HANDLER, SUBMIT_HANDLER, UPDATE_STORIES_USER } from "../actions/images";
+import { COMMENT_HANDLER, FETCH_COMMENTS, FETCH_DATA, FETCH_STORIES, LIKED_COMMENT_HANDLER, LIKED_HANDLER, SAVED_HANDLER, SUBMIT_HANDLER, UPDATE_STORIES_USER } from "../actions/images";
 
 const initialState = {
     feedData: [],
@@ -54,7 +54,6 @@ export default (state = initialState, action) => {
             id: action.id,
             username: action.userId,
             comments: action.comments,
-            isLiked: false
         });
         imageData.comments = comments;
         updatedFeedData[index] = imageData;
@@ -63,8 +62,21 @@ export default (state = initialState, action) => {
             ...state,
             feedData: updatedFeedData
         }
-    }
-    else if (action.type === SAVED_HANDLER) {
+    } else if (action.type === LIKED_COMMENT_HANDLER) {
+        const updatedFeedData = [...state.feedData];
+        let imageData = updatedFeedData.find(feed => feed.id === action.imageId);
+        let index = updatedFeedData.findIndex(feed => feed.id === action.imageId);
+        imageData = {
+            ...imageData,
+            comments: action.comments
+        }
+        updatedFeedData[index] = imageData;
+
+        return {
+            ...state,
+            feedData: updatedFeedData
+        }
+    } else if (action.type === SAVED_HANDLER) {
         const updatedFeedData = [...state.feedData];
         let imageData = updatedFeedData.find(feed => feed.id === action.imageId);
         let index = updatedFeedData.findIndex(feed => feed.id === action.imageId);

@@ -9,6 +9,7 @@ export const FETCH_COMMENTS = 'FETCH_COMMENTS';
 export const FETCH_STORIES = 'FETCH_STORIES';
 export const FETCH_STORIES_SPECIFIC = 'FETCH_STORIES_SPECIFIC';
 export const UPDATE_STORIES_USER = 'UPDATE_STORIES_USER';
+export const LIKED_COMMENT_HANDLER = 'LIKED_COMMENT_HANDLER';
 
 export const likedHandler = (imageId, userId, isLiked) => {
     return async dispatch => {
@@ -48,7 +49,7 @@ export const likedHandler = (imageId, userId, isLiked) => {
     }
 }
 
-export const commentsHandler = (imageId, userId, comments) => {
+export const commentsHandler = (imageId, userId, comments, isLiked) => {
     return async dispatch => {
         let response = await fetch(`https://rn-social-networking.firebaseio.com/feed/${imageId}.json`, {
             method: 'GET'
@@ -63,8 +64,7 @@ export const commentsHandler = (imageId, userId, comments) => {
         commentsData.push({
             id: id,
             username: userId,
-            comments: comments,
-            isLiked: false
+            comments: comments
         });
 
         response = await fetch(`https://rn-social-networking.firebaseio.com/feed/${imageId}.json`, {
@@ -84,6 +84,49 @@ export const commentsHandler = (imageId, userId, comments) => {
             userId: userId,
             comments: comments
         });
+    }
+}
+
+export const commentLikedHandler = (imageId, id, isLiked) => {
+    return async (dispatch, getState) => {
+        let response = await fetch(`https://rn-social-networking.firebaseio.com/feed/${imageId}/comments.json`, {
+            method: 'GET'
+        });
+        if(response.ok) {
+            let resData = await response.json();
+            if(resData) {
+                let targetComment = resData.find(eachData => eachData.id === id);
+                const likedpeople = targetComment.likedPeople? targetComment.likedPeople: [];
+                if(isLiked === true) {
+                    likedpeople.push(getState().user.loggedInUserdata.localId);
+                }else {
+                    likedpeople.splice(likedpeople.indexOf(getState().user.loggedInUserdata.localId), 1);
+                }
+                targetComment = {
+                    ...targetComment,
+                    likedPeople: likedpeople
+                }
+                const targetCommentIndex = resData.findIndex(eachData => eachData.id === id);
+                resData[targetCommentIndex] = targetComment;
+                
+                await fetch(`https://rn-social-networking.firebaseio.com/feed/${imageId}/comments/${targetCommentIndex}.json`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        likedPeople: likedpeople
+                    })
+                });
+
+                dispatch({
+                    type: LIKED_COMMENT_HANDLER,
+                    comments: resData,
+                    imageId: imageId,
+                    id: id
+                });
+            }
+        }
     }
 }
 
@@ -211,7 +254,8 @@ export const fetchCommentsData = imageId => {
                     id: eachComment.id,
                     username: eachComment.username,
                     profileImage: profilImage,
-                    comments: eachComment.comments
+                    comments: eachComment.comments,
+                    likedPeople: eachComment.likedPeople? eachComment.likedPeople: []
                 })
             })
         }

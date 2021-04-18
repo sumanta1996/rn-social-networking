@@ -42,7 +42,8 @@ const LikeScreen = props => {
             <View style={styles.container}>
                 <TouchableWithoutFeedback onPress={
                     () => props.navigation.navigate('UserProfile', {
-                        user: itemData.item.username
+                        user: itemData.item.username,
+                        id: itemData.item.id
                     })
                 }>
                     <View style={styles.userDetails}>

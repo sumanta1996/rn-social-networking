@@ -1,7 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Image, ScrollView, TouchableHighlight, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Image, ScrollView, TouchableHighlight, TouchableOpacity, FlatList, Modal, TouchableWithoutFeedback } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { commentsHandler, fetchCommentsData } from '../store/actions/images';
+import { commentLikedHandler, commentsHandler, fetchCommentsData } from '../store/actions/images';
 import { notificationCreator } from '../store/actions/notification';
 import { fetchFilteredData } from '../store/actions/user';
 
@@ -14,7 +15,10 @@ const CommentsScreen = props => {
     const imageId = props.navigation.getParam('imageId');
     const [comments, setComments] = useState('');
     const [showUsers, setShowUsers] = useState(false);
+    const [commentLikedId, setCommentLikedId] = useState();
     const searchedUsers = useSelector(state => state.user.searchedUsers);
+    const [showModal, setShowModal] = useState(false);
+    const [likedData, setLikedData] = useState([]);
 
     const dispatch = useDispatch();
     let textRef;
@@ -102,8 +106,38 @@ const CommentsScreen = props => {
         })
     }
 
+    const commentsLikedHandler = (commentId, isLiked) => {
+        dispatch(commentLikedHandler(imageId, commentId, isLiked));
+    }
+
+    const fetchIsLikedFromData = itemData => {
+        return itemData.item.likedPeople && itemData.item.likedPeople.includes(loggedInUser.localId) ? true : false
+    }
+
+    const likeScreenHandler = itemData => {
+        setShowModal(true);
+        const ids = itemData.item.likedPeople;
+        const likedData = [];
+        ids.map(id => {
+            const user = userData.find(eachUser => eachUser.id === id);
+            likedData.push(user);
+        });
+        setLikedData(likedData);
+    }
+
     const renderComment = itemData => {
         let finalText = [];
+        let isLiked;
+        if (commentLikedId) {
+            if (commentLikedId.id === itemData.item.id) {
+                isLiked = commentLikedId.isLiked
+            } else {
+                isLiked = fetchIsLikedFromData(itemData);
+            }
+        } else {
+            isLiked = fetchIsLikedFromData(itemData);
+        }
+
         if (itemData.item.comments.includes('@')) {
             const updatedText = itemData.item.comments.split('@');
             updatedText.map((text, index) => {
@@ -129,14 +163,22 @@ const CommentsScreen = props => {
         }
         //finalText=<Text>{finalText}</Text>;
         //console.log(finalText);
-        return <View style={styles.commentTab}>
-            <Image source={{ uri: itemData.item.profileImage }} style={styles.image} />
-            <Text style={styles.usernameText}>{itemData.item.username} :</Text>
-            <View style={{ paddingRight: 10, marginRight: 10 }}>
-                <Text>{finalText.map(text => {
-                    return text;
-                })}</Text>
+        return <View style={{ width: '100%' }}>
+            <View style={styles.commentTab}>
+                <Image source={{ uri: itemData.item.profileImage }} style={styles.image} />
+                <Text style={{ marginTop: 5 }}><Text style={styles.usernameText}>{itemData.item.username} :</Text> {finalText.map(text => text)}</Text>
             </View>
+            {itemData.item.likedPeople && itemData.item.likedPeople.length > 0 ?
+                <Text style={styles.likeCount} onPress={likeScreenHandler.bind(this, itemData)}>{itemData.item.likedPeople.length + " like"}</Text> : null}
+            <Ionicons name={isLiked === true ? "md-heart" : "md-heart-empty"} size={15} color={isLiked === true ? "red" : "black"} style={styles.likeButton}
+                onPress={() => {
+                    isLiked = !isLiked;
+                    setCommentLikedId({
+                        id: itemData.item.id,
+                        isLiked: isLiked
+                    });
+                    commentsLikedHandler(itemData.item.id, isLiked);
+                }} />
         </View>
     }
 
@@ -175,6 +217,34 @@ const CommentsScreen = props => {
                 </TouchableHighlight>)}
             </ScrollView>}
             {userCommentComponent}
+            <Modal animationType="slide" transparent={true} visible={showModal} onRequestClose={() => setShowModal(!showModal)}>
+                <View style={{ flex: 1 }}>
+                    <TouchableWithoutFeedback onPress={() => setShowModal(!showModal)}>
+                        <View style={styles.modal}></View>
+                    </TouchableWithoutFeedback>
+                    <View style={styles.screen}>
+                        <FlatList data={likedData} renderItem={itemData => <View>
+                            <TouchableWithoutFeedback onPress={() => {
+                                setShowModal(false);
+                                props.navigation.navigate('UserProfile', {
+                                    user: itemData.item.username,
+                                    id: itemData.item.id
+                                })
+                            }}>
+                                <View style={styles.userDetails}>
+                                    <View style={styles.imageUserContainer} >
+                                        <Image source={{ uri: itemData.item.profileImage }} style={styles.userImage} />
+                                    </View>
+                                    <View>
+                                        <Text style={styles.boldText}>{itemData.item.username}</Text>
+                                        <Text style={styles.normalText}>{itemData.item.fullName}</Text>
+                                    </View>
+                                </View>
+                            </TouchableWithoutFeedback>
+                        </View>} />
+                    </View>
+                </View>
+            </Modal>
         </View>
     )
 }
@@ -223,7 +293,8 @@ const styles = StyleSheet.create({
         width: 30,
         height: 30,
         borderRadius: 15,
-        margin: 10
+        marginHorizontal: 10,
+        marginTop: 10
     },
     fullName: {
         fontFamily: 'open-sans-bold',
@@ -241,14 +312,55 @@ const styles = StyleSheet.create({
     commentTab: {
         flexDirection: 'row',
         width: '80%',
-        height: 50,
-        margin: 10,
-        alignItems: 'center'
+        marginLeft: 5,
+        marginRight: 5,
+        marginTop: 5
     },
     centered: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center'
+    },
+    likeButton: {
+        position: 'absolute',
+        right: 5,
+        top: 15
+    },
+    likeCount: {
+        marginLeft: '20%',
+    },
+    modal: {
+        width: '100%',
+        height: '30%',
+        backgroundColor: 'rgba(240, 240, 240, 0.3)',
+    },
+    screen: {
+        width: '100%',
+        height: '70%',
+        backgroundColor: 'white',
+        borderRadius: 15
+    },
+    userDetails: {
+        height: '100%',
+        flexDirection: 'row',
+        alignItems: 'center'
+    },
+    imageUserContainer: {
+        width: 70,
+        height: 70,
+        margin: 10
+    },
+    userImage: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 35,
+    },
+    boldText: {
+        fontFamily: 'open-sans-bold'
+    },
+    normalText: {
+        fontFamily: 'open-sans',
+        color: '#585858'
     }
 })
 
