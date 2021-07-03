@@ -5,7 +5,7 @@ const initialState = {
     enitreUserDatabase: [],
     userData: null,
     loggedInUserdata: [],
-    searchedUsers: []
+    searchedUsers: [],
 }
 
 export default (state = initialState, action) => {
@@ -66,9 +66,17 @@ export default (state = initialState, action) => {
                 userData: updatedUserData
             }
         case SEARCH_USERS:
+            console.log('ACTION: ',action);
             return {
                 ...state,
-                searchedUsers: state.enitreUserDatabase.filter(data => data.username.toLowerCase().includes(action.text.toLowerCase()) || data.fullName.toLowerCase().includes(action.text.toLowerCase()))
+                searchedUsers: state.enitreUserDatabase.filter(data => {
+                    if(data && data.username) {
+                        return data.username.toLowerCase().includes(action.text.toLowerCase()) || data.fullName.toLowerCase().includes(action.text.toLowerCase());
+                    }else {
+                        return false;
+                    }
+                    
+                })
             }
         case SUBMIT_HANDLER:
             const updatedLoggedinUserData = { ...state.loggedInUserdata };

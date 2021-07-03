@@ -40,7 +40,9 @@ const LayoutScreen = props => {
 
         if (!result.cancelled) {
             console.log(result);
-           props.navigation.navigate(screenName);
+           props.navigation.navigate(screenName, { 
+            imageObj: result
+           });
         }
     }
 

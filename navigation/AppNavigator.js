@@ -28,6 +28,8 @@ import ConversationScreen from '../screens/ConversationScreen';
 import ShareContentScreen from '../screens/ShareContentScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import TagPhotoScreen from '../screens/TagPhotoScreen';
+import { deleteTokenLogout } from '../store/actions/user';
+import SignupScreen from '../screens/SignupScreen';
 
 export let focusCount = 0;
 
@@ -117,7 +119,8 @@ const DrawerProfileNavigator = createDrawerNavigator({
                 <Fontisto name="bookmark" size={25} style={{ paddingRight: 20 }} />
                 <Text>Saved</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={{ flexDirection: 'row', marginVertical: 10 }} onPress={() => {
+            <TouchableOpacity style={{ flexDirection: 'row', marginVertical: 10 }} onPress={async () => {
+                await dispatch(deleteTokenLogout());
                 AsyncStorage.removeItem('userData');
                 props.navigation.navigate('Startup');
                 dispatch(setActivity('HomepageFeed'));
@@ -174,7 +177,8 @@ const DrawerProfileNavigator = createDrawerNavigator({
 }); */
 
 const AuthNavigator = createStackNavigator({
-    Auth: AuthScreen
+    Auth: AuthScreen,
+    Signup: SignupScreen
 }, {
     defaultNavigationOptions: {
         headerShown: false

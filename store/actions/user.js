@@ -515,6 +515,64 @@ export const updateLoggedInUserStories = (userid, storyid, viewedStory) => {
     }
 }
 
+export const deleteTokenLogout = () => {
+    return async (dispatch, getState) => {
+        const localId = getState().user.loggedInUserdata.localId;
+        await fetch(`https://rn-social-networking.firebaseio.com/users/${localId}/token.json`, {
+            method: 'DELETE'
+        });
+    }
+}
+
+export const signUp = (email, password, fullName, username) => {
+    return async dispatch => {
+        const resData = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyAOA-42HV4pasMPJPSrzuFvdoD-r0uTFHo',{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password,
+                returnSecureToken: true
+            })
+        });
+        
+        if(resData.ok) {
+            const response = await resData.json();
+            const localId = response.localId;
+            const defaultProfileImage = 'https://www.pasrc.org/sites/g/files/toruqf431/files/styles/freeform_750w/public/2021-03/blank-profile-picture-973460_1280.jpg?itok=QzRqRVu8';
+            const obj = {
+                fullName: fullName,
+                posts: 0,
+                profileImage: defaultProfileImage,
+                status: 'Hey I am in Instagram. Lets connect',
+                username: username
+            }
+
+            await fetch(`https://rn-social-networking.firebaseio.com/users/${localId}.json`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(obj)
+            });
+
+        }else {
+            const errData = await resData.json();
+            console.log(errData);
+            let message = 'Something went wrong!'
+            if (errData.error.message === 'EMAIL_EXISTS') {
+                message = 'This email address already exist.';
+            } else if (errData.error.message === 'TOO_MANY_ATTEMPTS_TRY_LATER') {
+                message = 'Too many attempts have been done. Please try later!';
+            }
+            throw new Error(message);
+        }
+        
+    }
+}
+
 const saveToStorage = (token, userId, expiresIn) => {
     AsyncStorage.setItem('userData', JSON.stringify({
         token: token,
