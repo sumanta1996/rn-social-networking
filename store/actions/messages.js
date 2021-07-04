@@ -6,7 +6,7 @@ export const FETCH_NOTIFICATIONS = 'FETCH_NOTIFICATIONS';
 //conversationId if exist 
 //userId of the user we sending to
 //message content 
-export const setMessages = (pushToken, conversationId, userId, message, isShare, isUpload, repliedStoryId, repliedText) => {
+export const setMessages = (pushToken, conversationId, userId, message, isShare, isUpload, repliedStoryId, repliedText, vanishMode) => {
     return async (dispatch, getState) => {
         const loggedInUser = getState().user.loggedInUserdata;
         const timestamp = new Date().toISOString();
@@ -24,7 +24,8 @@ export const setMessages = (pushToken, conversationId, userId, message, isShare,
                 isShare: isImageShare,
                 isUpload: isImageUpload,
                 repliedId: repliedId,
-                repliedText: repliedText
+                repliedText: repliedText,
+                isVanishMode: vanishMode? vanishMode: false
             })
             const response = await fetch(`https://rn-social-networking.firebaseio.com/messages/${conversationId}.json`, {
                 method: 'POST',
@@ -38,7 +39,8 @@ export const setMessages = (pushToken, conversationId, userId, message, isShare,
                     isShare: isImageShare,
                     isUpload: isImageUpload,
                     repliedId: repliedId,
-                    repliedText: repliedText
+                    repliedText: repliedText,
+                    isVanishMode: vanishMode? vanishMode: false
                 })
             })
             if (response.ok) {
@@ -60,7 +62,8 @@ export const setMessages = (pushToken, conversationId, userId, message, isShare,
                 id: id,
                 userId: loggedInUser.localId,
                 message: message,
-                time: timestamp
+                time: timestamp,
+                isVanishMode: vanishMode? vanishMode: false
             })
             const response = await fetch(`https://rn-social-networking.firebaseio.com/messages/${id}.json`, {
                 method: 'POST',
@@ -70,7 +73,8 @@ export const setMessages = (pushToken, conversationId, userId, message, isShare,
                 body: JSON.stringify({
                     userId: loggedInUser.localId,
                     message: message,
-                    time: timestamp
+                    time: timestamp,
+                    isVanishMode: vanishMode? vanishMode: false
                 })
             });
             if (response.ok) {
@@ -109,7 +113,8 @@ export const fetchMessagesIdSpecific = (messageId, isNew) => {
                                 isNew: true,
                                 id: resData[key].message,
                                 userId: resData[key].userId,
-                                time: resData[key].time
+                                time: resData[key].time,
+                                isVanishMode: resData[key].isVanishMode? resData[key].isVanishMode: false
                             })
                         }
                     } else if (resData[key].repliedId) {
@@ -143,7 +148,8 @@ export const fetchMessagesIdSpecific = (messageId, isNew) => {
                                 isShare: true,
                                 id: resData[key].message,
                                 userId: resData[key].userId,
-                                time: resData[key].time
+                                time: resData[key].time,
+                                isVanishMode: resData[key].isVanishMode? resData[key].isVanishMode: false
                             })
                         }
                     } else if (resData[key].repliedId) {
@@ -214,7 +220,7 @@ export const fetchAllMessages = () => {
     }
 }
 
-const sendMessageNotification = async (pushToken, title, body, conversationId) => {
+export const sendMessageNotification = async (pushToken, title, body, conversationId) => {
     const response = await fetch('https://exp.host/--/api/v2/push/send', {
         method: 'POST',
         headers: {
@@ -232,6 +238,63 @@ const sendMessageNotification = async (pushToken, title, body, conversationId) =
         })
     });
 }
+
+export const deleteVanishMessages = conversationId => {
+    return async dispatch => {
+        const response = await fetch(`https://rn-social-networking.firebaseio.com/messages/${conversationId}.json`,{method: 'GET'});
+        if(response.ok) {
+            const resData = await response.json();
+            if(resData) {
+                for(let key in resData) {
+                    if(resData[key].isVanishMode && resData[key].isVanishMode === true) {
+                        fetch(`https://rn-social-networking.firebaseio.com/messages/${conversationId}/${key}.json`,{method: 'DELETE'});
+                    }
+                }
+            }
+        }
+    }
+}
+
+/* export const sendVanishMessageNotification = (pushToken, title, body, data) => {
+    return async (dispatch, getState) => {
+        const response = await fetch('https://exp.host/--/api/v2/push/send', {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'accept-encoding': 'gzip, deflate',
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+                to: pushToken,
+                title: title,
+                body: body,
+                data: data
+            })
+        });
+    }
+} */
+
+/* export const setVanishNotificationUserMapping = (conversationId, vanishFlag) => {
+    return async (dispatch, getState) => {
+        return {
+            type: SET_VANISH_NOTIFICATION_USER_MAPPING,
+            conversationId: conversationId,
+            vanishFlag: vanishFlag
+        }
+    }
+}
+
+export const setVanishNotifications = (conversationId, userId, message) => {
+    return async (dispatch, getState) => {
+        return {
+            type: SET_VANISH_NOTIFICATIONS,
+            conversationId: conversationId,
+            userId: userId,
+            message: message,
+            time: new Date().toISOString(),
+        }
+    }
+} */
 
 const setMessageIdToUser = async (userId, conversationId) => {
     const url = `https://rn-social-networking.firebaseio.com/users/${userId}.json`;

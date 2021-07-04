@@ -9,7 +9,7 @@ import { fetchNotifications, notificationCreator } from '../store/actions/notifi
 import LayoutScreen from './LayoutScreen';
 import * as Notifications from 'expo-notifications';
 import { setActivity } from '../store/actions/ActiveBar';
-import { fetchMessagesIdSpecific } from '../store/actions/messages';
+import { fetchMessagesIdSpecific, setVanishNotifications, setVanishNotificationUserMapping } from '../store/actions/messages';
 import { fetchEntireUserDatabase, fetchLoggedinuserStories, fetchUserData, pushMessagesidsToLoggedInUser, pushStoryToLoggedinuser, uploadStories } from '../store/actions/user';
 import { Ionicons } from '@expo/vector-icons';
 import firebase from "firebase";
@@ -62,10 +62,17 @@ const HomepageFeedScreen = props => {
         } else {
             const id = notification.request.content.data.conversationId;
             if (id) {
-                dispatch(fetchEntireUserDatabase());
-                dispatch(fetchMessagesIdSpecific(id, true));
-                dispatch(pushMessagesidsToLoggedInUser(id));
-                dispatch(fetchUserData(loggedInUser.localId, true));
+                /* const isVanishMode = notification.request.content.data.vanishMode;
+                if(isVanishMode && isVanishMode === true) {
+                    dispatch(setVanishNotificationUserMapping(id, isVanishMode));
+                    dispatch(setVanishNotifications(id, notification.request.content.data.userId, notification.request.content.data.message))
+                }else {
+                    dispatch(setVanishNotificationUserMapping(id, isVanishMode? isVanishMode: false)); */
+                    dispatch(fetchEntireUserDatabase());
+                    dispatch(fetchMessagesIdSpecific(id, true));
+                    dispatch(pushMessagesidsToLoggedInUser(id));
+                    dispatch(fetchUserData(loggedInUser.localId, true));
+               //}
             }
         }
     })
@@ -85,8 +92,8 @@ const HomepageFeedScreen = props => {
             setIsRefreshing(true);
             await dispatch(fetchFeedData());
             await dispatch(fetchEntireUserDatabase());
-            await dispatch(fetchNotifications());
-            await dispatch(fetchLoggedinuserStories());
+            dispatch(fetchNotifications());
+            dispatch(fetchLoggedinuserStories());
             await dispatch(fetchStories());
             setIsRefreshing(false);
         }

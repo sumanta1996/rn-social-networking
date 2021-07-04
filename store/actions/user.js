@@ -18,6 +18,7 @@ export const REMOVE_NEW_MESSAGE_ID = 'REMOVE_NEW_MESSAGE_ID';
 export const PUSH_STORY_LOGGEDIN = 'PUSH_STORY_LOGGEDIN';
 export const FETCH_STORY_LOGGEDIN = 'FETCH_STORY_LOGGEDIN';
 export const UPDATE_STORY_LOGGEDIN = 'UPDATE_STORY_LOGGEDIN';
+export const VANISHMODE_LOGGEDIN_USER = 'VANISHMODE_LOGGEDIN_USER';
 
 export const removeFollowers = (username, identifier, userTobeRemoved) => {
     return {
@@ -570,6 +571,48 @@ export const signUp = (email, password, fullName, username) => {
             throw new Error(message);
         }
         
+    }
+}
+
+export const updateVanishModeData = (localId, conversationId, isVanishMode) => {
+    return async (dispatch, getState) => {
+        const loggedInUser = getState().user.loggedInUserdata;
+        dispatch(updateVanishModeDataUserWise(localId, conversationId, isVanishMode));
+        dispatch(updateVanishModeDataUserWise(loggedInUser.localId, conversationId, isVanishMode));
+    }
+}
+
+const updateVanishModeDataUserWise = (localId, conversationId, isVanishMode) => {
+    return async (dispatch, getState) => {
+        const response = await fetch(`https://rn-social-networking.firebaseio.com/users/${localId}.json`, {
+            method: 'GET'
+        });
+        if(response.ok) {
+            const user = await response.json();
+            const vanishModeConversations = user.vanishModeConversations? user.vanishModeConversations: [];
+            if(isVanishMode === true) {
+                if(!vanishModeConversations.includes(conversationId)) {
+                    vanishModeConversations.push(conversationId);
+                }
+            }else {
+                vanishModeConversations.splice(vanishModeConversations.indexOf(conversationId),1);
+            }
+            await fetch(`https://rn-social-networking.firebaseio.com/users/${localId}.json`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    vanishModeConversations: vanishModeConversations
+                })
+            });
+            if(getState().user.loggedInUserdata.localId === localId) {
+                dispatch({
+                    type: VANISHMODE_LOGGEDIN_USER,
+                    vanishModeConversations: vanishModeConversations
+                })
+            }
+        }
     }
 }
 

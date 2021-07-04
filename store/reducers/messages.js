@@ -4,7 +4,9 @@ import { FETCH_NOTIFICATIONS } from "../actions/notification";
 const initialState = {
     conversationThread: {},
     activeThreadId: null,
-    newMessageIds: []
+    newMessageIds: [],
+    /* vanishConversationThread: {},
+    vanishConversationUserData: {} */
 }
 
 /* {
@@ -32,7 +34,8 @@ export default (state = initialState, action) => {
                 isShare: action.isShare,
                 isUpload: action.isUpload,
                 repliedId: action.repliedId,
-                repliedText: action.repliedText
+                repliedText: action.repliedText,
+                isVanishMode: action.isVanishMode? action.isVanishMode: false
             })
             updatedThread = {
                 ...updatedThread,
@@ -59,6 +62,33 @@ export default (state = initialState, action) => {
                 ...state,
                 conversationThread: action.conversationThread
             }
+        /* case SET_VANISH_NOTIFICATION_USER_MAPPING:
+            const updatedVanishMapping = {...state.vanishConversationUserData};
+            updatedVanishMapping[action.conversationId] = action.vanishFlag;
+            return {
+                ...state,
+                vanishConversationUserData: updatedVanishMapping
+            }
+        case SET_VANISH_NOTIFICATIONS:
+            let updatedData = {...state.vanishConversationThread};
+            let updatedEachThread = [];
+            if(updatedData[action.conversationId]) {
+                updatedEachThread = [...updatedData[action.conversationId]];
+                updatedEachThread.push({
+                    userId: action.userId,
+                    message: action.message,
+                    time: action.time,
+                });
+                updatedData = {
+                    ...updatedData,
+                    [action.conversationId]: updatedEachThread
+                }
+            }
+            return {
+                ...state,
+                vanishConversationThread: updatedData
+            } */
+
         default: return state;
     }
 }

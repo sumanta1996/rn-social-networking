@@ -1,4 +1,4 @@
-import { ADD_FOLLOWING, FETCH_ENTIRE_USER, FETCH_STORY_LOGGEDIN, FETCH_USER_DATA, MERGE_TO_FOLLOWERS, MERGE_TO_FOLLOWING, PUSH_MESSAGE_ID_LOGGED_IN, PUSH_STORY_LOGGEDIN, REMOVE_FOLLOWERS, REMOVE_NEW_MESSAGE_ID, SEARCH_USERS, SET_LOGIN_DATA, UPDATE_STORY_LOGGEDIN } from "../actions/user";
+import { ADD_FOLLOWING, FETCH_ENTIRE_USER, FETCH_STORY_LOGGEDIN, FETCH_USER_DATA, MERGE_TO_FOLLOWERS, MERGE_TO_FOLLOWING, PUSH_MESSAGE_ID_LOGGED_IN, PUSH_STORY_LOGGEDIN, REMOVE_FOLLOWERS, REMOVE_NEW_MESSAGE_ID, SEARCH_USERS, SET_LOGIN_DATA, UPDATE_STORY_LOGGEDIN, VANISHMODE_LOGGEDIN_USER } from "../actions/user";
 import { SUBMIT_HANDLER } from "../actions/images";
 
 const initialState = {
@@ -151,6 +151,14 @@ export default (state = initialState, action) => {
                     stories: updatedStories
                 }
             }
+        case VANISHMODE_LOGGEDIN_USER:
+            const updatedDataLoggedIn = { ...state.loggedInUserdata };
+            updatedDataLoggedIn.vanishModeConversations = action.vanishModeConversations;
+            return {
+                ...state,
+                loggedInUserdata: updatedDataLoggedIn
+            }
+            
         default: return state;
     }
 }

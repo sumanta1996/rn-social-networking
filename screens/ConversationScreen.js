@@ -2,12 +2,12 @@ import { Entypo, Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableHighlight, ActivityIndicator, Image, KeyboardAvoidingView, FlatList, Keyboard,
-    Dimensions, TouchableWithoutFeedback, Modal, TouchableNativeFeedback
+    Dimensions, TouchableWithoutFeedback, Modal, TouchableNativeFeedback, Animated, PanResponder
 } from 'react-native';
 //import { FlatList, ScrollView } from 'react-native-gesture-handler';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchMessagesIdSpecific, setMessages } from '../store/actions/messages';
-import { fetchEntireUserDatabase, fetchUserData, pushMessagesidsToLoggedInUser, removeNewMessagesToUser } from '../store/actions/user';
+import { deleteVanishMessages, fetchMessagesIdSpecific, sendMessageNotification, setMessages, setVanishNotifications, setVanishNotificationUserMapping } from '../store/actions/messages';
+import { fetchEntireUserDatabase, fetchUserData, pushMessagesidsToLoggedInUser, removeNewMessagesToUser, updateVanishModeData } from '../store/actions/user';
 import firebase from "firebase";
 import * as ImagePicker from 'expo-image-picker';
 import StoryViewerHandler from './StoryViewerHandler';
@@ -24,6 +24,8 @@ const ConversationScreen = props => {
     const [message, setMessage] = useState('');
     const [reload, setReload] = useState(true);
     const conversationThread = useSelector(state => state.messages.conversationThread);
+    //const vanishConversationThread = useSelector(state => state.messages.vanishConversationThread);
+    //const vanishConversationUserData = useSelector(state => state.messages.vanishConversationUserData);
     const threadId = useSelector(state => state.messages.activeThreadId);
     const dispatch = useDispatch();
     const [messageSentLoader, setMessageSentLoader] = useState(false);
@@ -35,12 +37,93 @@ const ConversationScreen = props => {
     const [showReplyBar, setReplyBar] = useState(false);
     const [showReplyContainer, setShowReplyContainer] = useState(false);
     const [repliedText, setRepliedText] = useState();
+    const [endReached, setEndReached] = useState(false);
+    const [vanishMode, setVanishMode] = useState(loggedInUser.vanishModeConversations && loggedInUser.vanishModeConversations.includes(conversationId)? true: false);
+    const [scrollEnable, setScrollEnable] = useState(true);
+    const [disablePanResponder, setDisablePanResponders] = useState(false);
+    const [showVanishLoader, setShowVanishLoader] = useState(false);
+    const [triggerNotification, setTriggerNotification] = useState(false);
     let textInputRef;
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [panResponder, setPanResponder] = useState(PanResponder.create({
+        onMoveShouldSetResponderCapture: () => true,
+        onMoveShouldSetPanResponder: (event, gestureState) => {
+            if (gestureState.dy < 0) {
+                if(conversationThread[conversationId]) {
+                    setScrollEnable(false);
+                    return true;
+                }else {
+                    setScrollEnable(true);
+                    return false;
+                }
+            } else {
+                setScrollEnable(true);
+                return false;
+            }
+        },
+        onPanResponderGrant: () => {
+            setPosition({ x: 0, y: 0 });
+        },
+        onPanResponderMove: (event, gestureState) => {
+            if (gestureState.dy < -300) {
+                setDisablePanResponders(prevValue => {
+                    if (prevValue === false) {
+                        setPosition({ x: 0, y: 0 });
+                        setVanishMode(prevData => {
+                            const data = !prevData;
+                            setTriggerNotification(true);
+                            return data;
+                        });
+                        setShowVanishLoader(false);
+                        return true;
+                    }
+                });
+            } else {
+                setShowVanishLoader(true);
+                setPosition({ x: 0, y: gestureState.dy })
+            }
+            Animated.event(null, {
+                dy: position.y,
+                useNativeDriver: true
+            })
+        },
+        onPanResponderRelease: () => {
+            setPosition({ x: 0, y: 0 });
+            setDisablePanResponders(false);
+            setShowVanishLoader(false);
+            //Execute on release
+        }
+    }));
+
+    useEffect(() => {
+        if(triggerNotification === true) {
+            (async () => {
+                dispatch(updateVanishModeData(userId, conversationId, vanishMode));
+                const body = loggedInUser.username + (vanishMode === true? ' enabled ': ' disabled ') + 'vanish mode';
+                sendMessageNotification(pushToken, 'Message', body, conversationId);
+                setTriggerNotification(false);
+                if(vanishMode === false) {
+                    await dispatch(deleteVanishMessages(conversationId));
+                    await dispatch(fetchMessagesIdSpecific(conversationId, false));
+                }
+            })();
+        }
+    }, [vanishMode]);
+
+    useEffect(() => {
+        const vanishModeConversations = loggedInUser.vanishModeConversations? loggedInUser.vanishModeConversations: [];
+        if(vanishModeConversations.includes(conversationId) && vanishMode === false) {
+            setVanishMode(true);
+        }else if(!vanishModeConversations.includes(conversationId) && vanishMode === true) {
+            setVanishMode(false);
+        }
+    }, [loggedInUser]);
 
     useEffect(() => {
         const listener1 = Keyboard.addListener('keyboardDidShow', () => setKeyboardActive(true));
         const listener2 = Keyboard.addListener('keyboardDidHide', () => setKeyboardActive(false));
         (async () => {
+            dispatch(fetchUserData(loggedInUser.localId, true));
             try {
                 await dispatch(fetchMessagesIdSpecific(conversationId, false));
                 await dispatch(removeNewMessagesToUser(conversationId));
@@ -59,22 +142,33 @@ const ConversationScreen = props => {
     const sendMessageHandler = async () => {
         setMessage('');
         setMessageSentLoader(true);
-        let repliedObj;
-        if (repliedText) {
-            repliedObj = {
-                userId: repliedText.userId,
-                message: repliedText.message
+        /* if (vanishMode === true) {
+            const obj = {
+                conversationId: conversationId,
+                isVanishMode: vanishMode,
+                message: message
             }
-        }
-        setRepliedText();
-        setShowReplyContainer(false);
-        await dispatch(setMessages(pushToken, conversationId, userId, message, false, false, null, repliedObj));
-        setMessageSentLoader(false);
-        console.log(props.navigation.getParam('conversationId'));
-        if (!props.navigation.getParam('conversationId')) {
-            dispatch(fetchUserData(loggedInUser.localId, true));
-            dispatch(fetchEntireUserDatabase());
-        }
+            await dispatch(sendVanishMessageNotification(pushToken, 'Message', userId+' sends a message in vanish mode.', obj));
+            dispatch(setVanishNotifications(conversationId, userId, message));
+            setMessageSentLoader(false);
+        } else { */
+            let repliedObj;
+            if (repliedText) {
+                repliedObj = {
+                    userId: repliedText.userId,
+                    message: repliedText.message
+                }
+            }
+            setRepliedText();
+            setShowReplyContainer(false);
+            await dispatch(setMessages(pushToken, conversationId, userId, message, false, false, null, repliedObj, vanishMode));
+            setMessageSentLoader(false);
+            console.log(props.navigation.getParam('conversationId'));
+            if (!props.navigation.getParam('conversationId')) {
+                dispatch(fetchUserData(loggedInUser.localId, true));
+                dispatch(fetchEntireUserDatabase());
+            }
+        //}
     }
 
     const showTimeHandler = index => {
@@ -163,7 +257,6 @@ const ConversationScreen = props => {
     }
 
     const showStoryHandler = (item) => {
-        console.log(item);
         const arr = item.repliedId.split("/");
         const id = arr[0];
         const storyId = arr[1];
@@ -203,7 +296,10 @@ const ConversationScreen = props => {
     }
 
     const renderDataHandler = itemData => {
-        const time = new Date(itemData.item.time);
+        //Vanish or normal mode.
+        const checkWhichModeMessage = itemData.item.isVanishMode? itemData.item.isVanishMode: false;
+        if(checkWhichModeMessage === vanishMode) {
+            const time = new Date(itemData.item.time);
         const hours = time.getHours();
         const min = time.getMinutes();
         const displayTime = hours.toString() + ':' + min.toString();
@@ -260,6 +356,7 @@ const ConversationScreen = props => {
                 </View>
             </TouchableWithoutFeedback>
         }
+        } 
     }
 
     const bottomActionHandler = text => {
@@ -278,6 +375,8 @@ const ConversationScreen = props => {
         </View>
     }
 
+    const toggleEndReachedHandler = () => setEndReached(!endReached);
+
     if (reload) {
         return <View style={styles.centered}>
             <ActivityIndicator size="small" color="black" />
@@ -287,13 +386,26 @@ const ConversationScreen = props => {
     //keyboardActive === true ? {flexGrow: 1, justifyContent: 'flex-end', paddingBottom: height+65,}:styles.contentStyle
 
     return <KeyboardAvoidingView style={{ flexGrow: 1 }}>
+        {vanishMode === true && <Text style={styles.vanishModeText}>Vanish Mode Enabled</Text>}
         {conversationThread && conversationThread[conversationId] ?
-            <FlatList ref={ref => { flatListRef = ref }} data={conversationThread[conversationId]} renderItem={renderDataHandler} keyExtractor={(item, index) => index.toString()}
-                contentContainerStyle={StyleSheet.flatten([styles.contentStyle, keyboardActive === true ? { paddingBottom: 80 } : { paddingBottom: 65 }])}
+            <Animated.FlatList ref={ref => { flatListRef = ref }} data={conversationThread[conversationId]} renderItem={renderDataHandler} keyExtractor={(item, index) => index.toString()}
+                contentContainerStyle={{
+                    ...StyleSheet.flatten([styles.contentStyle, keyboardActive === true ? { paddingBottom: 80 } : { paddingBottom: 65 }]),
+                    transform: [{ translateX: position.x }, { translateY: position.y }]
+                }}
                 onContentSizeChange={(w, h) => {
-                    flatListRef.scrollToOffset({ animated: false, offset: h })
-                }} /> : null}
-        <View style={styles.conversationBox}>
+                    try{
+                        flatListRef.scrollToOffset({ animated: false, offset: h })
+                    }catch(err) {
+                        console.log('Maybe switched to vanish mode.');
+                    }
+                }} onEndReached={toggleEndReachedHandler} onEndReachedThreshold={0.2} onMomentumScrollBegin={toggleEndReachedHandler}
+                {...panResponder.panHandlers} scrollEnabled={scrollEnable} /> : null}
+        {showVanishLoader === true && <View style={styles.vanishText}>
+            <ActivityIndicator size={10} color="black" />
+            <Text>Swipe up to turn {vanishMode === true ? 'off' : 'on'} Vanish Mode.</Text>
+        </View>}
+        <View style={StyleSheet.flatten([styles.conversationBox, vanishMode === false ? {} : { borderStyle: 'dotted' }])}>
             <Ionicons size={23} color="black" onPress={uploadImageHandler.bind(this, true)} name="md-camera" />
             <TextInput style={styles.input} multiline onChangeText={text => setMessage(text)} value={message} ref={input => { textInputRef = input }} />
             <TouchableHighlight activeOpacity={0.2} onPress={message.length === 0 ? uploadImageHandler.bind(this, false) : sendMessageHandler}>
@@ -344,7 +456,17 @@ const styles = StyleSheet.create({
     },
     contentStyle: {
         flexGrow: 1,
-        justifyContent: 'flex-end'
+        justifyContent: 'flex-end',
+        minWidth: '100%',
+        minHeight: Dimensions.get('window').height / 2
+    },
+    vanishText: {
+        width: '100%',
+        height: 60,
+        position: 'absolute',
+        bottom: 55,
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     conversationBox: {
         width: '100%',
@@ -495,7 +617,12 @@ const styles = StyleSheet.create({
         width: 1,
         height: '100%',
         backgroundColor: 'black'
-    }
+    }, 
+    vanishModeText: {
+        position: 'absolute',
+        marginLeft: Dimensions.get('window').width/2 - 90,
+        marginTop: 10
+    } 
 })
 
 export default ConversationScreen;
